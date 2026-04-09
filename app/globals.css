@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #0e0c0c;
+  --color-bg-alt: #1a1412;
+  --color-surface: #231a18;
+  --color-text: #f0e8e0;
+  --color-text-muted: #9a8878;
+  --color-accent: #c41e24;
+  --color-accent-alt: #d4a84b;
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  --font-display: var(--font-playfair, 'Playfair Display'), Georgia, serif;
+  --font-body: var(--font-inter, 'Inter'), 'DM Sans', sans-serif;
+  --font-chango: var(--font-chango, 'Chango'), cursive;
+
+  --spacing-nav: 72px;
+  --container-container: 1200px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-animate {
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.hero-animate-delay-1 { animation-delay: 0.2s; }
+.hero-animate-delay-2 { animation-delay: 0.4s; }
+.hero-animate-delay-3 { animation-delay: 0.6s; }
+.hero-animate-delay-4 { animation-delay: 0.8s; }
+
+/* Light mode overrides */
+:root.light {
+  --color-bg: #faf5f0;
+  --color-bg-alt: #f0e8e0;
+  --color-surface: #e8ddd4;
+  --color-text: #1a1412;
+  --color-text-muted: #6b5b4f;
+  --color-accent: #a01820;
+  --color-accent-alt: #b8922e;
+  --color-border: rgba(0, 0, 0, 0.08);
+}
+
+:root.light body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}

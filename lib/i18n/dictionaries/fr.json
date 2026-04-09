@@ -1,0 +1,156 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "menu": "Menu",
+    "events": "Événements",
+    "info": "Informations",
+    "contact": "Contact",
+    "takeaway": "Takeaway"
+  },
+  "hero": {
+    "superscript": "Restaurant Chinois & Thaïlandais · Vilvoorde",
+    "title": "Restaurant Imperial",
+    "subtitle": "Dim Sum, Canard Laqué, Ti-Pan, Wok — une tradition culinaire asiatique au cœur de Vilvoorde.",
+    "cta": "Voir le menu",
+    "scroll": "Scroll"
+  },
+  "about": {
+    "title": "Notre Restaurant",
+    "body": "Situé au cœur de Vilvoorde, le Restaurant Imperial vous accueille pour une expérience culinaire raffinée. Réputé pour ses généreux rijsttafels soigneusement composés, il propose également une vaste sélection de plus de 100 plats authentiques, disponibles en salle et à emporter. Laissez-vous séduire par des saveurs riches, un savoir-faire artisanal et une atmosphère chaleureuse et élégante."
+  },
+  "featured": {
+    "title": "Nos Spécialités"
+  },
+  "menu": {
+    "title": "Notre Carte",
+    "addButton": "+ Ajouter",
+    "priceRestaurant": "Rest.",
+    "priceTraiteur": "Trait."
+  },
+  "events": {
+    "title": "Événements",
+    "body": "Organisez votre prochain événement chez Restaurant Imperial. Anniversaires, repas d'entreprise, fêtes de famille — nous proposons des formules sur mesure pour toutes vos occasions spéciales.",
+    "cta": "Nous contacter"
+  },
+  "findUs": {
+    "title": "Nous Trouver",
+    "address": "Romeinsesteenweg 220, 1800 Vilvoorde, Belgique",
+    "phone": "02 267 02 70",
+    "hoursTitle": "Heures d'ouverture",
+    "hours": {
+      "monday": {
+        "day": "Lundi",
+        "time": "11h30 – 14h30  /  17h30 – 22h00"
+      },
+      "tuesday": {
+        "day": "Mardi",
+        "time": "Fermé"
+      },
+      "wednesday": {
+        "day": "Mercredi",
+        "time": "11h30 – 14h30  /  17h30 – 22h00"
+      },
+      "thursday": {
+        "day": "Jeudi",
+        "time": "11h30 – 14h30  /  17h30 – 22h00"
+      },
+      "friday": {
+        "day": "Vendredi",
+        "time": "11h30 – 14h30  /  17h30 – 22h00"
+      },
+      "saturday": {
+        "day": "Samedi",
+        "time": "11h30 – 14h30  /  17h30 – 22h00"
+      },
+      "sunday": {
+        "day": "Dimanche",
+        "time": "11h30 – 14h30  /  17h30 – 22h00"
+      }
+    }
+  },
+  "reservation": {
+    "title": "Réserver une Table",
+    "guests": "Nombre de convives",
+    "date": "Date",
+    "time": "Heure",
+    "continue": "Continuer",
+    "contactTitle": "Vos Coordonnées",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "specialRequests": "Demandes spéciales",
+    "confirm": "Confirmer la Réservation",
+    "otpSentTo": "Code envoyé à",
+    "otpLabel": "Code de vérification",
+    "verify": "Vérifier",
+    "verifying": "Vérification…",
+    "otpError": "Code incorrect ou expiré",
+    "resendCode": "Renvoyer le code",
+    "back": "Retour",
+    "confirmedTitle": "Réservation Confirmée",
+    "confirmedGuests": "{{count}} convives",
+    "confirmedEmail": "Un email de confirmation a été envoyé à",
+    "backHome": "Retour à l'accueil"
+  },
+  "order": {
+    "title": "Votre Commande",
+    "close": "Fermer",
+    "total": "Total",
+    "emailOrder": "Commander par Email",
+    "reserveOrder": "Réserver et Commander",
+    "empty": "Votre panier est vide",
+    "customerName": "Votre nom",
+    "customerEmail": "Email",
+    "customerPhone": "Téléphone (optionnel)",
+    "sendOtp": "Confirmer ma commande",
+    "sending": "Envoi…",
+    "otpSentTo": "Code envoyé à",
+    "otpLabel": "Code de vérification",
+    "otpPlaceholder": "______",
+    "verify": "Valider",
+    "verifying": "Vérification…",
+    "otpError": "Code incorrect ou expiré",
+    "back": "Retour",
+    "successTitle": "Commande confirmée !",
+    "successBody": "Nous avons reçu votre commande et vous enverrons une confirmation par email.",
+    "newOrder": "Nouvelle commande",
+    "otpNote": "Un code à 6 chiffres vous sera envoyé pour confirmer votre email."
+  },
+  "footer": {
+    "copyright": "© 2026 Restaurant Imperial · Vilvoorde, Belgique"
+  },
+  "eventContact": {
+    "title": "Réserver un Événement",
+    "subtitle": "Anniversaires, repas d'entreprise, fêtes de famille",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "eventType": "Type d'événement",
+    "eventTypes": {
+      "birthday": "Anniversaire",
+      "corporate": "Repas d'entreprise",
+      "wedding": "Mariage / Fiançailles",
+      "family": "Repas de famille",
+      "catering": "Traiteur à domicile",
+      "other": "Autre"
+    },
+    "eventDate": "Date souhaitée",
+    "guests": "Nombre de personnes",
+    "message": "Message / Demandes spéciales",
+    "submit": "Envoyer la demande",
+    "submitting": "Envoi en cours…",
+    "otpSentTo": "Code envoyé à",
+    "otpLabel": "Code de vérification",
+    "verify": "Vérifier",
+    "verifying": "Vérification…",
+    "otpError": "Code incorrect ou expiré",
+    "resendCode": "Renvoyer le code",
+    "back": "Retour",
+    "successTitle": "Demande envoyée !",
+    "successBody": "Nous vous contacterons dans les plus brefs délais pour confirmer votre réservation.",
+    "backHome": "Retour à l'accueil",
+    "required": "Champ obligatoire"
+  }
+}

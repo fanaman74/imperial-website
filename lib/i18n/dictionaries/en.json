@@ -1,0 +1,156 @@
+{
+  "nav": {
+    "home": "Home",
+    "menu": "Menu",
+    "events": "Events",
+    "info": "Information",
+    "contact": "Contact",
+    "takeaway": "Takeaway"
+  },
+  "hero": {
+    "superscript": "Chinese & Thai Restaurant · Vilvoorde",
+    "title": "Restaurant Imperial",
+    "subtitle": "Dim Sum, Peking Duck, Ti-Pan, Wok — an authentic Asian culinary tradition in the heart of Vilvoorde.",
+    "cta": "View the menu",
+    "scroll": "Scroll"
+  },
+  "about": {
+    "title": "Our Restaurant",
+    "body": "Located in the heart of Vilvoorde, Restaurant Imperial welcomes you to a refined culinary experience. Renowned for our generous and carefully curated rijsttafels, we also offer an extensive selection of over 100 authentic dishes, available for both dine-in and takeaway. Indulge in rich flavours, craftsmanship, and a warm, elegant atmosphere."
+  },
+  "featured": {
+    "title": "Our Specialities"
+  },
+  "menu": {
+    "title": "Our Menu",
+    "addButton": "+ Add",
+    "priceRestaurant": "Rest.",
+    "priceTraiteur": "Take."
+  },
+  "events": {
+    "title": "Events",
+    "body": "Organise your next event at Restaurant Imperial. Birthdays, corporate dinners, family celebrations — we offer bespoke packages for all your special occasions.",
+    "cta": "Contact us"
+  },
+  "findUs": {
+    "title": "Find Us",
+    "address": "Romeinsesteenweg 220, 1800 Vilvoorde, Belgium",
+    "phone": "02 267 02 70",
+    "hoursTitle": "Opening hours",
+    "hours": {
+      "monday": {
+        "day": "Monday",
+        "time": "11:30 – 14:30  /  17:30 – 22:00"
+      },
+      "tuesday": {
+        "day": "Tuesday",
+        "time": "Closed"
+      },
+      "wednesday": {
+        "day": "Wednesday",
+        "time": "11:30 – 14:30  /  17:30 – 22:00"
+      },
+      "thursday": {
+        "day": "Thursday",
+        "time": "11:30 – 14:30  /  17:30 – 22:00"
+      },
+      "friday": {
+        "day": "Friday",
+        "time": "11:30 – 14:30  /  17:30 – 22:00"
+      },
+      "saturday": {
+        "day": "Saturday",
+        "time": "11:30 – 14:30  /  17:30 – 22:00"
+      },
+      "sunday": {
+        "day": "Sunday",
+        "time": "11:30 – 14:30  /  17:30 – 22:00"
+      }
+    }
+  },
+  "reservation": {
+    "title": "Book a Table",
+    "guests": "Number of guests",
+    "date": "Date",
+    "time": "Time",
+    "continue": "Continue",
+    "contactTitle": "Your Details",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "specialRequests": "Special requests",
+    "confirm": "Confirm Reservation",
+    "otpSentTo": "Code sent to",
+    "otpLabel": "Verification code",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "otpError": "Incorrect or expired code",
+    "resendCode": "Resend code",
+    "back": "Back",
+    "confirmedTitle": "Reservation Confirmed",
+    "confirmedGuests": "{{count}} guests",
+    "confirmedEmail": "A confirmation email has been sent to",
+    "backHome": "Back to home"
+  },
+  "order": {
+    "title": "Your Order",
+    "close": "Close",
+    "total": "Total",
+    "emailOrder": "Order by Email",
+    "reserveOrder": "Reserve & Order",
+    "empty": "Your cart is empty",
+    "customerName": "Your name",
+    "customerEmail": "Email",
+    "customerPhone": "Phone (optional)",
+    "sendOtp": "Confirm my order",
+    "sending": "Sending…",
+    "otpSentTo": "Code sent to",
+    "otpLabel": "Verification code",
+    "otpPlaceholder": "______",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "otpError": "Incorrect or expired code",
+    "back": "Back",
+    "successTitle": "Order confirmed!",
+    "successBody": "We have received your order and will send a confirmation by email.",
+    "newOrder": "New order",
+    "otpNote": "A 6-digit code will be sent to confirm your email."
+  },
+  "footer": {
+    "copyright": "© 2026 Restaurant Imperial · Vilvoorde, Belgium"
+  },
+  "eventContact": {
+    "title": "Book an Event",
+    "subtitle": "Birthdays, corporate dinners, family celebrations",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "eventType": "Event type",
+    "eventTypes": {
+      "birthday": "Birthday",
+      "corporate": "Corporate dinner",
+      "wedding": "Wedding / Engagement",
+      "family": "Family gathering",
+      "catering": "Home catering",
+      "other": "Other"
+    },
+    "eventDate": "Desired date",
+    "guests": "Number of guests",
+    "message": "Message / Special requests",
+    "submit": "Send request",
+    "submitting": "Sending…",
+    "otpSentTo": "Code sent to",
+    "otpLabel": "Verification code",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "otpError": "Incorrect or expired code",
+    "resendCode": "Resend code",
+    "back": "Back",
+    "successTitle": "Request sent!",
+    "successBody": "We will get back to you as soon as possible to confirm your booking.",
+    "backHome": "Back to home",
+    "required": "Required field"
+  }
+}

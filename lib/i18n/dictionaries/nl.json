@@ -1,0 +1,156 @@
+{
+  "nav": {
+    "home": "Home",
+    "menu": "Menu",
+    "events": "Evenementen",
+    "info": "Informatie",
+    "contact": "Contact",
+    "takeaway": "Afhaal"
+  },
+  "hero": {
+    "superscript": "Chinees & Thais Restaurant · Vilvoorde",
+    "title": "Restaurant Imperial",
+    "subtitle": "Dim Sum, Pekingeend, Ti-Pan, Wok — een authentieke Aziatische culinaire traditie in het hart van Vilvoorde.",
+    "cta": "Bekijk het menu",
+    "scroll": "Scroll"
+  },
+  "about": {
+    "title": "Ons Restaurant",
+    "body": "Gelegen in het hart van Vilvoorde verwelkomt Restaurant Imperial u voor een verfijnde culinaire ervaring. Bekend om zijn royale en zorgvuldig samengestelde rijsttafels, biedt het ook een uitgebreide selectie van meer dan 100 authentieke gerechten, beschikbaar voor consumptie ter plaatse en afhaal. Geniet van rijke smaken, vakmanschap en een warme, elegante sfeer."
+  },
+  "featured": {
+    "title": "Onze Specialiteiten"
+  },
+  "menu": {
+    "title": "Onze Kaart",
+    "addButton": "+ Toevoegen",
+    "priceRestaurant": "Rest.",
+    "priceTraiteur": "Afh."
+  },
+  "events": {
+    "title": "Evenementen",
+    "body": "Organiseer uw volgend evenement bij Restaurant Imperial. Verjaardagen, bedrijfsmaaltijden, familiefeesten — wij bieden formules op maat voor al uw speciale gelegenheden.",
+    "cta": "Neem contact op"
+  },
+  "findUs": {
+    "title": "Ons Vinden",
+    "address": "Romeinsesteenweg 220, 1800 Vilvoorde, België",
+    "phone": "02 267 02 70",
+    "hoursTitle": "Openingsuren",
+    "hours": {
+      "monday": {
+        "day": "Maandag",
+        "time": "11u30 – 14u30  /  17u30 – 22u00"
+      },
+      "tuesday": {
+        "day": "Dinsdag",
+        "time": "Gesloten"
+      },
+      "wednesday": {
+        "day": "Woensdag",
+        "time": "11u30 – 14u30  /  17u30 – 22u00"
+      },
+      "thursday": {
+        "day": "Donderdag",
+        "time": "11u30 – 14u30  /  17u30 – 22u00"
+      },
+      "friday": {
+        "day": "Vrijdag",
+        "time": "11u30 – 14u30  /  17u30 – 22u00"
+      },
+      "saturday": {
+        "day": "Zaterdag",
+        "time": "11u30 – 14u30  /  17u30 – 22u00"
+      },
+      "sunday": {
+        "day": "Zondag",
+        "time": "11u30 – 14u30  /  17u30 – 22u00"
+      }
+    }
+  },
+  "reservation": {
+    "title": "Reserveer een Tafel",
+    "guests": "Aantal gasten",
+    "date": "Datum",
+    "time": "Tijdstip",
+    "continue": "Doorgaan",
+    "contactTitle": "Uw Gegevens",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "specialRequests": "Bijzondere wensen",
+    "confirm": "Reservering Bevestigen",
+    "otpSentTo": "Code verstuurd naar",
+    "otpLabel": "Verificatiecode",
+    "verify": "Verifiëren",
+    "verifying": "Bezig…",
+    "otpError": "Onjuiste of verlopen code",
+    "resendCode": "Code opnieuw sturen",
+    "back": "Terug",
+    "confirmedTitle": "Reservering Bevestigd",
+    "confirmedGuests": "{{count}} gasten",
+    "confirmedEmail": "Een bevestigingsmail is verstuurd naar",
+    "backHome": "Terug naar home"
+  },
+  "order": {
+    "title": "Uw Bestelling",
+    "close": "Sluiten",
+    "total": "Totaal",
+    "emailOrder": "Bestellen per E-mail",
+    "reserveOrder": "Reserveren en Bestellen",
+    "empty": "Uw winkelmandje is leeg",
+    "customerName": "Uw naam",
+    "customerEmail": "E-mail",
+    "customerPhone": "Telefoon (optioneel)",
+    "sendOtp": "Bestelling bevestigen",
+    "sending": "Verzenden…",
+    "otpSentTo": "Code verzonden naar",
+    "otpLabel": "Verificatiecode",
+    "otpPlaceholder": "______",
+    "verify": "Bevestigen",
+    "verifying": "Verificatie…",
+    "otpError": "Onjuiste of verlopen code",
+    "back": "Terug",
+    "successTitle": "Bestelling bevestigd!",
+    "successBody": "We hebben uw bestelling ontvangen en sturen u een bevestiging per e-mail.",
+    "newOrder": "Nieuwe bestelling",
+    "otpNote": "U ontvangt een 6-cijferige code om uw e-mail te bevestigen."
+  },
+  "footer": {
+    "copyright": "© 2026 Restaurant Imperial · Vilvoorde, België"
+  },
+  "eventContact": {
+    "title": "Een Evenement Reserveren",
+    "subtitle": "Verjaardagen, bedrijfsmaaltijden, familiefeesten",
+    "firstName": "Voornaam",
+    "lastName": "Naam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "eventType": "Type evenement",
+    "eventTypes": {
+      "birthday": "Verjaardag",
+      "corporate": "Bedrijfsmaaltijd",
+      "wedding": "Huwelijk / Verloving",
+      "family": "Familiediner",
+      "catering": "Catering aan huis",
+      "other": "Andere"
+    },
+    "eventDate": "Gewenste datum",
+    "guests": "Aantal personen",
+    "message": "Bericht / Speciale wensen",
+    "submit": "Aanvraag versturen",
+    "submitting": "Verzenden…",
+    "otpSentTo": "Code verstuurd naar",
+    "otpLabel": "Verificatiecode",
+    "verify": "Verifiëren",
+    "verifying": "Bezig…",
+    "otpError": "Onjuiste of verlopen code",
+    "resendCode": "Code opnieuw sturen",
+    "back": "Terug",
+    "successTitle": "Aanvraag verzonden!",
+    "successBody": "We nemen zo spoedig mogelijk contact met u op om uw reservering te bevestigen.",
+    "backHome": "Terug naar home",
+    "required": "Verplicht veld"
+  }
+}
