@@ -1,5 +1,8 @@
 'use client';
 import { useState, useMemo, useRef } from 'react';
+import { useEffect } from 'react';
+import { useUser } from '@/components/UserProvider';
+import SignInModal from '@/components/SignInModal';
 
 type ReservationDict = {
   title: string;
@@ -58,6 +61,24 @@ function getFirstDayOfWeek(year: number, month: number) {
   return day === 0 ? 6 : day - 1;
 }
 
+function SignInNudge() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-6 p-4 border border-border rounded-lg bg-surface/50 text-center space-y-3">
+      <p className="text-sm text-text-muted">Sign in to skip email verification</p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-sm text-accent hover:underline"
+      >
+        Sign in with Google or Facebook
+      </button>
+      <SignInModal open={open} onClose={() => setOpen(false)} />
+      <p className="text-xs text-text-muted">Or continue with email code below</p>
+    </div>
+  );
+}
+
 export default function Reservation({ dict, locale }: ReservationProps) {
   const [step, setStep] = useState(1);
   const [guests, setGuests] = useState(2);
@@ -77,6 +98,18 @@ export default function Reservation({ dict, locale }: ReservationProps) {
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (user) {
+      const fullName = (user.user_metadata?.full_name as string | undefined) ?? '';
+      const parts = fullName.split(' ');
+      setFirstName(parts[0] || user.email?.split('@')[0] || '');
+      setLastName(parts.slice(1).join(' ') || '');
+      setEmail(user.email ?? '');
+    }
+  }, [user]);
+
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const monthNames = monthNamesByLocale[locale] || monthNamesByLocale.fr;
@@ -128,6 +161,38 @@ export default function Reservation({ dict, locale }: ReservationProps) {
   async function handleConfirm() {
     if (!canConfirm() || submitting) return;
     setSubmitting(true);
+
+    if (user) {
+      // Signed-in: submit reservation directly without OTP
+      try {
+        const res = await fetch('/api/reservation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guests,
+            date: selectedDate!.toISOString().split('T')[0],
+            time: selectedTime,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            phone: phone.trim(),
+            specialRequests: specialRequests.trim(),
+            locale,
+          }),
+        });
+        if (!res.ok) {
+          setError(dict.otpError || 'Failed to submit. Please try again.');
+          return;
+        }
+        setStep(4);
+      } catch {
+        setError(dict.otpError || 'Network error.');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // Unauthenticated: send OTP
     const ok = await sendOtp();
     setSubmitting(false);
     if (!ok) {
@@ -210,10 +275,14 @@ export default function Reservation({ dict, locale }: ReservationProps) {
 
   async function handleResend() {
     setResending(true);
-    await sendOtp();
+    const ok = await sendOtp();
+    setResending(false);
+    if (!ok) {
+      setOtpError(dict.otpError || 'Failed to send code. Please try again.');
+      return;
+    }
     setOtpDigits(['', '', '', '', '', '']);
     setOtpError('');
-    setResending(false);
     setTimeout(() => otpRefs.current[0]?.focus(), 50);
   }
 
@@ -327,16 +396,16 @@ export default function Reservation({ dict, locale }: ReservationProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-text-muted mb-1">{dict.firstName}</label>
-                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors" />
+                <input type="text" value={firstName} onChange={e => !user && setFirstName(e.target.value)} readOnly={!!user} className={`w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors${user ? ' opacity-60 cursor-not-allowed' : ''}`} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-wider text-text-muted mb-1">{dict.lastName}</label>
-                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors" />
+                <input type="text" value={lastName} onChange={e => !user && setLastName(e.target.value)} readOnly={!!user} className={`w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors${user ? ' opacity-60 cursor-not-allowed' : ''}`} />
               </div>
             </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-text-muted mb-1">{dict.email}</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors" />
+              <input type="email" value={email} onChange={e => !user && setEmail(e.target.value)} readOnly={!!user} className={`w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors${user ? ' opacity-60 cursor-not-allowed' : ''}`} />
             </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-text-muted mb-1">{dict.phone}</label>
@@ -358,7 +427,7 @@ export default function Reservation({ dict, locale }: ReservationProps) {
                 disabled={!canConfirm() || submitting}
                 className="flex-1 py-3 text-sm uppercase tracking-wider border border-accent text-accent hover:bg-accent hover:text-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {submitting ? '…' : dict.confirm}
+                {submitting ? '…' : user ? 'Reserve' : dict.confirm}
               </button>
             </div>
           </div>
@@ -366,6 +435,7 @@ export default function Reservation({ dict, locale }: ReservationProps) {
 
         {step === 3 && (
           <div className="space-y-6">
+            {!user && <SignInNudge />}
             <p className="text-text-muted text-sm text-center">
               {dict.otpSentTo} <span className="text-accent">{email}</span>
             </p>
