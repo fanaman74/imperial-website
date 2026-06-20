@@ -74,6 +74,7 @@ export default function Reservation({ dict, locale }: ReservationProps) {
 
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
+  const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -127,8 +128,12 @@ export default function Reservation({ dict, locale }: ReservationProps) {
   async function handleConfirm() {
     if (!canConfirm() || submitting) return;
     setSubmitting(true);
-    await sendOtp();
+    const ok = await sendOtp();
     setSubmitting(false);
+    if (!ok) {
+      setError(dict.otpError || 'Failed to send code. Please try again.');
+      return;
+    }
     setOtpDigits(['', '', '', '', '', '']);
     setOtpError('');
     setStep(3);
@@ -267,6 +272,8 @@ export default function Reservation({ dict, locale }: ReservationProps) {
                         key={day}
                         onClick={() => selectDay(day)}
                         disabled={isDisabled}
+                        aria-pressed={!!isSelected}
+                        aria-disabled={isDisabled}
                         className={`aspect-square flex items-center justify-center text-sm rounded transition-colors ${
                           isSelected
                             ? 'bg-accent text-bg font-medium'
@@ -340,6 +347,8 @@ export default function Reservation({ dict, locale }: ReservationProps) {
               <textarea value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} rows={3} className="w-full bg-transparent border-b border-border py-2 text-sm focus:border-accent outline-none transition-colors resize-none" />
             </div>
 
+            {error && <div className="bg-red-900/30 border border-red-500/40 text-red-300 px-4 py-3 rounded-sm text-sm">{error}</div>}
+
             <div className="flex gap-4">
               <button onClick={() => setStep(1)} className="px-6 py-3 text-sm uppercase tracking-wider text-text-muted hover:text-text transition-colors">
                 &larr;
@@ -374,6 +383,7 @@ export default function Reservation({ dict, locale }: ReservationProps) {
                     value={digit}
                     onChange={e => handleOtpInput(i, e.target.value)}
                     onKeyDown={e => handleOtpKeyDown(i, e)}
+                    aria-label={`OTP digit ${i + 1} of 6`}
                     className="w-11 h-14 text-center text-xl font-mono border border-border rounded focus:border-accent outline-none bg-transparent transition-colors"
                   />
                 ))}

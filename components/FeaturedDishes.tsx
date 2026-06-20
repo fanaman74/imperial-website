@@ -1,10 +1,5 @@
-type Dish = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string | null;
-};
+import Image from 'next/image';
+import type { Dish } from '@/lib/types';
 
 type FeaturedDishesProps = {
   dict: { title: string };
@@ -33,12 +28,13 @@ export default function FeaturedDishes({ dict, dishes }: FeaturedDishesProps) {
               className="relative rounded-sm overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
             >
               {item.image ? (
-                <div className="aspect-[3/4] overflow-hidden">
-                  <img
+                <div className="aspect-[3/4] overflow-hidden relative">
+                  <Image
                     src={item.image}
                     alt={item.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 </div>

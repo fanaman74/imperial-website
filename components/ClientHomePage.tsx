@@ -13,10 +13,7 @@ import Reservation from '@/components/Reservation';
 import Footer from '@/components/Footer';
 import TakeawayPanel from '@/components/TakeawayPanel';
 import FixedMenus from '@/components/FixedMenus';
-
-type Dish = { id: string; name: string; description: string; price: number; image: string | null };
-type MenuItem = { id: string; num: string; name: string; description: string; priceRestaurant: number; priceTakeaway: number | null };
-type Category = { id: string; name: string; items: MenuItem[] };
+import type { Category, Dish } from '@/lib/types';
 
 export default function ClientHomePage() {
   const { locale, dict } = useLanguage();
@@ -25,8 +22,9 @@ export default function ClientHomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`/api/menu?locale=${locale}`)
+    fetch(`/api/menu?locale=${locale}`, { signal: controller.signal })
       .then(r => r.json())
       .then(({ categories, featured }) => {
         setMenuData(categories || []);
@@ -34,6 +32,7 @@ export default function ClientHomePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    return () => controller.abort();
   }, [locale]);
 
   return (
@@ -47,7 +46,9 @@ export default function ClientHomePage() {
       {!loading && <Menu categories={menuData} dict={dict.menu} />}
       {loading && (
         <section id="menu" className="py-24 px-6 flex justify-center items-center min-h-[300px]">
-          <span className="text-text-muted text-sm uppercase tracking-widest">Chargement…</span>
+          <span className="text-text-muted text-sm uppercase tracking-widest">
+            {locale === 'nl' ? 'Laden…' : locale === 'en' ? 'Loading…' : 'Chargement…'}
+          </span>
         </section>
       )}
       <ScrollReveal><FixedMenus /></ScrollReveal>

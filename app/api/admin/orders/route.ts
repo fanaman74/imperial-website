@@ -1,28 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
-import { verifyAdminSession } from '@/lib/admin-auth';
+import { checkAuth } from '@/lib/admin-auth';
+import { statusUpdateSchema, ORDER_STATUSES } from '@/lib/validation';
 
-async function checkAuth(req: NextRequest) {
-  const token = req.cookies.get('imperial_admin_token')?.value;
-  if (!token || !(await verifyAdminSession(token))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  return null;
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const authError = await checkAuth(req);
   if (authError) return authError;
 
-  const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from('imperial_orders')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50);
+  try {
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const pageSize = 50;
+    const offset = (page - 1) * pageSize;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+    const supabase = createServerClient();
+    const { data, error, count } = await supabase
+      .from('imperial_orders')
+      .select('id, name, email, phone, items, total, status, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+
+    if (error) {
+      console.error('Orders fetch error:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+    return NextResponse.json({ data, total: count, page, pageSize });
+  } catch (e) {
+    console.error('Orders GET error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -30,15 +38,27 @@ export async function PATCH(req: NextRequest) {
   if (authError) return authError;
 
   try {
-    const { id, status } = await req.json();
-    if (!id || !status) return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
+    const body = await req.json();
+    const parsed = statusUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+    const { id, status } = parsed.data;
+
+    if (!ORDER_STATUSES.includes(status as typeof ORDER_STATUSES[number])) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
 
     const supabase = createServerClient();
     const { error } = await supabase.from('imperial_orders').update({ status }).eq('id', id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('Order update error:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    console.error('Order PATCH error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

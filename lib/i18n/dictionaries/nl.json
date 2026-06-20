@@ -25,7 +25,8 @@
     "title": "Onze Kaart",
     "addButton": "+ Toevoegen",
     "priceRestaurant": "Rest.",
-    "priceTraiteur": "Afh."
+    "priceTraiteur": "Trait.",
+    "dish": "Gerecht"
   },
   "events": {
     "title": "Evenementen",

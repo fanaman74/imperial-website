@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
-import { verifyAdminSession } from '@/lib/admin-auth';
+import { checkAuth } from '@/lib/admin-auth';
+import { menuItemSchema } from '@/lib/validation';
 
-async function checkAuth(req: NextRequest) {
-  const token = req.cookies.get('imperial_admin_token')?.value;
-  if (!token || !(await verifyAdminSession(token))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  return null;
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: NextRequest,
@@ -17,20 +12,27 @@ export async function GET(
   const authError = await checkAuth(req);
   if (authError) return authError;
 
-  const { itemId } = await params;
-  const supabase = createServerClient();
+  try {
+    const { itemId } = await params;
+    const supabase = createServerClient();
 
-  const { data: item } = await supabase.from('imperial_items').select('*').eq('id', itemId).single();
-  if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const [itemRes, translationsRes] = await Promise.all([
+      supabase.from('imperial_items').select('*').eq('id', itemId).single(),
+      supabase.from('imperial_item_translations').select('locale, name, description').eq('item_id', itemId),
+    ]);
 
-  const { data: translations } = await supabase.from('imperial_item_translations').select('locale, name, description').eq('item_id', itemId);
+    if (!itemRes.data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const transMap: Record<string, { name: string; description: string }> = {};
-  for (const t of translations || []) {
-    transMap[t.locale] = { name: t.name, description: t.description };
+    const transMap: Record<string, { name: string; description: string }> = {};
+    for (const t of translationsRes.data || []) {
+      transMap[t.locale] = { name: t.name, description: t.description };
+    }
+
+    return NextResponse.json({ ...itemRes.data, translations: transMap });
+  } catch (e) {
+    console.error('Menu item GET error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  return NextResponse.json({ ...item, translations: transMap });
 }
 
 export async function PUT(
@@ -43,7 +45,11 @@ export async function PUT(
   try {
     const { itemId } = await params;
     const body = await req.json();
-    const { category_id, num, price_restaurant, price_takeaway, active, is_featured, featured_image, sort_order, translations } = body;
+    const parsed = menuItemSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+    const { category_id, num, price_restaurant, price_takeaway, active, is_featured, featured_image, sort_order, translations } = parsed.data;
 
     const supabase = createServerClient();
 
@@ -51,32 +57,44 @@ export async function PUT(
       .from('imperial_items')
       .update({
         category_id,
-        num: num || null,
-        price_restaurant: price_restaurant || 0,
-        price_takeaway: price_takeaway || null,
+        num: num ?? null,
+        price_restaurant: price_restaurant != null ? Number(price_restaurant) : 0,
+        price_takeaway: price_takeaway != null ? Number(price_takeaway) : null,
         active: active !== false,
         is_featured: is_featured || false,
         featured_image: featured_image || null,
-        sort_order: sort_order || 0,
+        sort_order: sort_order != null ? Number(sort_order) : 0,
       })
       .eq('id', itemId);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('Menu item update error:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
 
     if (translations) {
-      for (const [locale, t] of Object.entries(translations) as [string, any][]) {
-        await supabase
+      // Batch upsert all translations in a single query
+      const transRows = Object.entries(translations).map(([locale, t]) => ({
+        item_id: itemId,
+        locale,
+        name: t.name || '',
+        description: t.description || '',
+      }));
+      if (transRows.length > 0) {
+        const { error: transError } = await supabase
           .from('imperial_item_translations')
-          .upsert(
-            { item_id: itemId, locale, name: t.name || '', description: t.description || '' },
-            { onConflict: 'item_id,locale' }
-          );
+          .upsert(transRows, { onConflict: 'item_id,locale' });
+        if (transError) {
+          console.error('Translation upsert error:', transError);
+          return NextResponse.json({ error: 'Database error' }, { status: 500 });
+        }
       }
     }
 
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    console.error('Menu item PUT error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -94,9 +112,13 @@ export async function DELETE(
     await supabase.from('imperial_item_translations').delete().eq('item_id', itemId);
     const { error } = await supabase.from('imperial_items').delete().eq('id', itemId);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('Menu item delete error:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    console.error('Menu item DELETE error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

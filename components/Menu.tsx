@@ -1,24 +1,11 @@
 'use client';
-import { useState } from 'react';
-
-type MenuItem = {
-  id: string;
-  num: string;
-  name: string;
-  description: string;
-  priceRestaurant: number;
-  priceTakeaway: number | null;
-};
-
-type Category = {
-  id: string;
-  name: string;
-  items: MenuItem[];
-};
+import { useState, useEffect } from 'react';
+import type { Category } from '@/lib/types';
 
 type MenuDict = {
   title: string;
   priceRestaurant: string;
+  dish: string;
 };
 
 interface MenuProps {
@@ -28,6 +15,13 @@ interface MenuProps {
 
 export default function Menu({ categories, dict }: MenuProps) {
   const [activeCategoryId, setActiveCategoryId] = useState(categories[0]?.id || '');
+
+  // Sync activeCategoryId when categories change (e.g. locale switch, async data load)
+  useEffect(() => {
+    if (categories.length > 0 && !categories.find(c => c.id === activeCategoryId)) {
+      setActiveCategoryId(categories[0].id);
+    }
+  }, [categories, activeCategoryId]);
 
   const activeCategory = categories.find(c => c.id === activeCategoryId);
 
@@ -63,7 +57,7 @@ export default function Menu({ categories, dict }: MenuProps) {
             {/* Column headers */}
             <div className="flex items-center text-xs uppercase tracking-wider text-text-muted border-b border-border pb-2 mb-4">
               <span className="w-10">#</span>
-              <span className="flex-1">Plat</span>
+              <span className="flex-1">{dict.dish || "Plat"}</span>
               <span className="w-16 text-center">{dict.priceRestaurant}</span>
             </div>
 
@@ -76,7 +70,7 @@ export default function Menu({ categories, dict }: MenuProps) {
                     <span className="text-text-muted text-xs ml-2">{item.description}</span>
                   )}
                 </div>
-                <span className="w-16 text-center text-sm">{item.priceRestaurant.toFixed(2)}</span>
+                <span className="w-16 text-center text-sm">{item.priceRestaurant.toFixed(2)}&euro;</span>
               </div>
             ))}
           </div>

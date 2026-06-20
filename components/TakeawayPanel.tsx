@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useOrder } from './OrderProvider';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
@@ -25,6 +25,39 @@ export default function TakeawayPanel() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
+
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Escape key + focus trap for slide-over panel
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const focusable = panel.querySelectorAll<HTMLElement>('button, input, a, select');
+    focusable[0]?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        close();
+        return;
+      }
+      if (e.key === 'Tab' && focusable.length > 0) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
 
   function close() {
     setOpen(false);
@@ -57,6 +90,29 @@ export default function TakeawayPanel() {
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch {
       setDetailsError('Network error');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleResend() {
+    setSending(true);
+    setDetailsError('');
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
+      if (!res.ok) {
+        setOtpError(t.otpError || 'Error');
+        return;
+      }
+      setOtp(['', '', '', '', '', '']);
+      setOtpError('');
+      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+    } catch {
+      setOtpError('Network error');
     } finally {
       setSending(false);
     }
@@ -143,8 +199,14 @@ export default function TakeawayPanel() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-50 bg-black/40" onClick={close} />
-          <div className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[400px] bg-bg border-l border-border flex flex-col shadow-2xl">
+          <div className="fixed inset-0 z-50 bg-black/40" onClick={close} aria-hidden="true" />
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.title || 'Cart'}
+            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[400px] bg-bg border-l border-border flex flex-col shadow-2xl"
+          >
 
             <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
               <div className="flex items-center gap-3">
@@ -264,6 +326,7 @@ export default function TakeawayPanel() {
                       onChange={e => handleOtpInput(i, e.target.value)}
                       onKeyDown={e => handleOtpKeyDown(i, e)}
                       disabled={verifying}
+                      aria-label={`OTP digit ${i + 1} of 6`}
                       className="w-11 h-14 text-center text-xl font-mono font-bold border border-border rounded-sm bg-transparent text-text focus:outline-none focus:border-accent transition-colors disabled:opacity-40"
                     />
                   ))}
@@ -275,8 +338,8 @@ export default function TakeawayPanel() {
                     {t.verify}
                   </button>
                 )}
-                <button onClick={() => { setOtp(['', '', '', '', '', '']); handleSendOtp({ preventDefault: () => {} } as any); }} className="mt-3 text-xs text-text-muted hover:text-text underline text-center">
-                  Renvoyer le code
+                <button onClick={(e) => { e.preventDefault(); setOtp(['', '', '', '', '', '']); handleResend(); }} className="mt-3 text-xs text-text-muted hover:text-text underline text-center">
+                  {t.resendCode || 'Renvoyer le code'}
                 </button>
               </div>
             )}

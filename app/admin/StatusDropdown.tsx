@@ -28,12 +28,16 @@ export default function StatusDropdown({
     setSaving(true);
     setStatus(newStatus);
     try {
-      await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: newStatus }),
       });
-      router.refresh();
+      if (!res.ok) {
+        setStatus(currentStatus);
+      } else {
+        router.refresh();
+      }
     } catch {
       setStatus(currentStatus);
     } finally {
@@ -48,6 +52,7 @@ export default function StatusDropdown({
       value={status}
       onChange={(e) => handleChange(e.target.value)}
       disabled={saving}
+      aria-label={`Status: ${status}`}
       className={`text-xs px-2 py-1 rounded border ${colorClass} bg-transparent cursor-pointer focus:outline-none disabled:opacity-50`}
     >
       {options.map((opt) => (

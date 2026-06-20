@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { hashToken } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,7 +10,8 @@ export async function POST(req: NextRequest) {
 
     if (token) {
       const supabase = createServerClient();
-      await supabase.from('imperial_admin_sessions').delete().eq('token', token);
+      const tokenHash = hashToken(token);
+      await supabase.from('imperial_admin_sessions').delete().eq('token_hash', tokenHash);
     }
 
     const res = NextResponse.json({ success: true });
@@ -19,7 +23,8 @@ export async function POST(req: NextRequest) {
       expires: new Date(0),
     });
     return res;
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    console.error('Admin logout error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

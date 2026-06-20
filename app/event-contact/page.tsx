@@ -30,19 +30,24 @@ export default function EventContactPage() {
   }
 
   async function sendOtp() {
-    await fetch('/api/otp/send', {
+    const res = await fetch('/api/otp/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: form.email, name: `${form.first_name} ${form.last_name}` }),
     });
+    return res.ok;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError('');
-    await sendOtp();
+    const ok = await sendOtp();
     setSubmitting(false);
+    if (!ok) {
+      setError(t?.otpError || 'Failed to send code. Please try again.');
+      return;
+    }
     setOtpDigits(['', '', '', '', '', '']);
     setOtpError('');
     setStep('otp');
@@ -117,7 +122,7 @@ export default function EventContactPage() {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen pt-[72px] flex items-center justify-center px-6">
+        <main id="main-content" className="min-h-screen pt-[72px] flex items-center justify-center px-6">
           <div className="text-center max-w-md">
             <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +144,7 @@ export default function EventContactPage() {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen pt-[72px] flex items-center justify-center px-6">
+        <main id="main-content" className="min-h-screen pt-[72px] flex items-center justify-center px-6">
           <div className="max-w-md w-full">
             <div className="text-center mb-8">
               <p className="text-text-muted">
@@ -159,6 +164,7 @@ export default function EventContactPage() {
                     value={digit}
                     onChange={e => handleOtpInput(i, e.target.value)}
                     onKeyDown={e => handleOtpKeyDown(i, e)}
+                    aria-label={`OTP digit ${i + 1} of 6`}
                     className="w-12 h-14 text-center text-xl font-mono border border-border rounded focus:border-accent outline-none bg-transparent transition-colors"
                   />
                 ))}
@@ -189,7 +195,7 @@ export default function EventContactPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen pt-[72px]">
+      <main id="main-content" className="min-h-screen pt-[72px]">
         <div
           className="relative py-32 px-6 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(https://images.pexels.com/photos/941861/pexels-photo-941861.jpeg?auto=compress&cs=tinysrgb&w=1920)' }}

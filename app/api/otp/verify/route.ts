@@ -1,32 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createPublicClient } from '@/lib/supabase-server';
+import { consumeOtp } from '@/lib/otp';
+import { otpVerifySchema } from '@/lib/validation';
+import { escapeHtml } from '@/lib/utils';
 import { Resend } from 'resend';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, code, customerName, customerPhone, items, total, locale } = await req.json();
+    const body = await req.json();
+    const parsed = otpVerifySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+    const { email, code, customerName, customerPhone, items, total } = parsed.data;
 
-    if (!email || !code || !items?.length) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // Verify and consume OTP using shared helper (handles brute-force lockout)
+    const otpResult = await consumeOtp(email, code);
+    if (!otpResult.valid) {
+      return NextResponse.json({ error: otpResult.reason }, { status: 400 });
     }
 
-    const supabase = createServerClient();
-
-    const { data: otps } = await supabase
-      .from('imperial_otps')
-      .select('id, code, expires_at, used')
-      .eq('email', email)
-      .eq('used', false)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    const otp = otps?.[0];
-    if (!otp) return NextResponse.json({ error: 'invalid' }, { status: 400 });
-    if (otp.code !== code) return NextResponse.json({ error: 'invalid' }, { status: 400 });
-    if (new Date(otp.expires_at) < new Date()) return NextResponse.json({ error: 'expired' }, { status: 400 });
-
-    await supabase.from('imperial_otps').update({ used: true }).eq('id', otp.id);
-
+    // Insert the order
+    const supabase = createPublicClient();
     const { data: order, error: orderError } = await supabase
       .from('imperial_orders')
       .insert({
@@ -44,22 +41,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
+    // Send confirmation emails — fire and forget (don't block the response)
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const restaurantEmail = process.env.RESTAURANT_EMAIL || 'imperial@restaurant.be';
 
     if (resendKey) {
       const resend = new Resend(resendKey);
-      const firstName = customerName?.split(' ')[0] || customerName;
+      const firstName = escapeHtml(customerName?.split(' ')[0] || customerName || '');
 
       const itemRows = items
-        .map((i: any) => `<tr>
+        .map((i) => `<tr>
           <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0">${i.quantity}×</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0">${i.name}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0">${escapeHtml(i.name)}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0;text-align:right">${(i.price * i.quantity).toFixed(2)}€</td>
         </tr>`)
         .join('');
 
+      const safeEmail = escapeHtml(email);
+      const safePhone = escapeHtml(customerPhone || '');
       const orderHtml = (forRestaurant: boolean) => `
         <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1412">
           <div style="background:#c41e24;padding:24px 32px">
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           </div>
           <div style="padding:32px;background:#fff;border:1px solid #e8ddd4">
             ${forRestaurant
-              ? `<p style="margin:0 0 16px"><strong>${customerName}</strong> — <a href="mailto:${email}" style="color:#c41e24">${email}</a>${customerPhone ? ` — ${customerPhone}` : ''}</p>`
+              ? `<p style="margin:0 0 16px"><strong>${escapeHtml(customerName)}</strong> — <a href="mailto:${safeEmail}" style="color:#c41e24">${safeEmail}</a>${safePhone ? ` — ${safePhone}` : ''}</p>`
               : `<p style="margin:0 0 16px">Bonjour ${firstName},<br>Merci pour votre commande !</p>`
             }
             <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 16px">
@@ -101,7 +101,8 @@ export async function POST(req: NextRequest) {
           </div>
         </div>`;
 
-      await Promise.all([
+      // Fire-and-forget: don't block the response on email delivery
+      Promise.all([
         resend.emails.send({
           from: `Imperial Website <${fromEmail}>`,
           to: [restaurantEmail],
@@ -119,7 +120,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, orderId: order.id });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    console.error('OTP verify error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

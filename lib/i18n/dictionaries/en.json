@@ -25,7 +25,8 @@
     "title": "Our Menu",
     "addButton": "+ Add",
     "priceRestaurant": "Rest.",
-    "priceTraiteur": "Take."
+    "priceTraiteur": "Trait.",
+    "dish": "Dish"
   },
   "events": {
     "title": "Events",

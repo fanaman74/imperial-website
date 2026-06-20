@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 type EventsDict = {
   title: string;
   body: string;
@@ -24,12 +26,12 @@ export default function Events({ dict }: { dict: EventsDict }) {
         <p className="text-text-muted leading-relaxed mb-8">
           {dict.body}
         </p>
-        <a
+        <Link
           href="/event-contact"
           className="inline-block border border-accent text-accent px-8 py-3 text-sm uppercase tracking-wider hover:bg-accent hover:text-bg transition-colors"
         >
           {dict.cta}
-        </a>
+        </Link>
       </div>
     </section>
   );

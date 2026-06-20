@@ -30,9 +30,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Sync <html lang> attribute with the active locale for screen readers and SEO
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   function setLocale(lng: Locale) {
     setLocaleState(lng);
     localStorage.setItem('imperial-locale', lng);
+    document.documentElement.lang = lng;
   }
 
   return (

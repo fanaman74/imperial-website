@@ -1,28 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createPublicClient } from '@/lib/supabase-server';
+import { hashToken, escapeHtml } from '@/lib/utils';
+import { otpSendSchema } from '@/lib/validation';
+import { OTP_TTL_MS } from '@/lib/otp';
+import { randomInt } from 'crypto';
 import { Resend } from 'resend';
 
+export const dynamic = 'force-dynamic';
+
 function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, name } = await req.json();
-    if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
+    const body = await req.json();
+    const parsed = otpSendSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+    const { email, name } = parsed.data;
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const codeHash = hashToken(code.toLowerCase());
+    const expiresAt = new Date(Date.now() + OTP_TTL_MS);
 
-    const supabase = createServerClient();
+    const supabase = createPublicClient();
+    // Invalidate all prior codes for this email
     await supabase.from('imperial_otps').update({ used: true }).eq('email', email).eq('used', false);
 
     const { error: dbError } = await supabase.from('imperial_otps').insert({
       email,
-      code,
+      code_hash: codeHash,
+      attempts: 0,
       expires_at: expiresAt.toISOString(),
     });
-    if (dbError) return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    if (dbError) {
+      console.error('OTP insert error:', dbError);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
@@ -33,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     const resend = new Resend(resendKey);
-    const firstName = name?.split(' ')[0] || '';
+    const firstName = escapeHtml(name?.split(' ')[0] || '');
 
     const { error: emailError } = await resend.emails.send({
       from: `Restaurant Imperial <${fromEmail}>`,
@@ -72,7 +88,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    console.error('OTP send error:', e);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

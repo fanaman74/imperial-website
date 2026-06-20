@@ -5,21 +5,7 @@ import TakeawayPanel from '@/components/TakeawayPanel';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-
-type MenuItem = {
-  id: string;
-  num: string;
-  name: string;
-  description: string;
-  priceRestaurant: number;
-  priceTakeaway: number | null;
-};
-
-type Category = {
-  id: string;
-  name: string;
-  items: MenuItem[];
-};
+import type { Category, MenuItem } from '@/lib/types';
 
 export default function TakeawayPage() {
   const { addItem } = useOrder();
@@ -30,8 +16,9 @@ export default function TakeawayPage() {
   const [added, setAdded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`/api/menu?locale=${locale}`)
+    fetch(`/api/menu?locale=${locale}`, { signal: controller.signal })
       .then(r => r.json())
       .then(({ categories }) => {
         setCategories(categories || []);
@@ -39,6 +26,7 @@ export default function TakeawayPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    return () => controller.abort();
   }, [locale]);
 
   const activeCategory = categories.find(c => c.id === activeCategoryId);
@@ -48,7 +36,7 @@ export default function TakeawayPage() {
       id: item.id,
       name: item.name,
       desc: item.description,
-      price: item.priceRestaurant,
+      price: item.priceTakeaway ?? item.priceRestaurant,
     });
     setAdded(prev => ({ ...prev, [item.id]: true }));
     setTimeout(() => setAdded(prev => ({ ...prev, [item.id]: false })), 1000);
@@ -57,7 +45,7 @@ export default function TakeawayPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen pt-[72px]">
+      <main id="main-content" className="min-h-screen pt-[72px]">
         <div className="max-w-[1200px] mx-auto px-6 py-16">
           <h1 className="font-chango text-3xl md:text-4xl text-center mb-2">
             Takeaway
@@ -70,7 +58,9 @@ export default function TakeawayPage() {
 
           {loading && (
             <div className="flex justify-center items-center min-h-[300px]">
-              <span className="text-text-muted text-sm uppercase tracking-widest">Chargement…</span>
+              <span className="text-text-muted text-sm uppercase tracking-widest">
+                {locale === 'nl' ? 'Laden…' : locale === 'en' ? 'Loading…' : 'Chargement…'}
+              </span>
             </div>
           )}
 
@@ -103,7 +93,9 @@ export default function TakeawayPage() {
                     <span className="flex-1">
                       {locale === 'nl' ? 'Gerecht' : locale === 'en' ? 'Dish' : 'Plat'}
                     </span>
-                    <span className="w-16 text-right">Prix</span>
+                    <span className="w-16 text-right">
+                      {locale === 'nl' ? 'Prijs' : locale === 'en' ? 'Price' : 'Prix'}
+                    </span>
                     <span className="w-20" />
                   </div>
 

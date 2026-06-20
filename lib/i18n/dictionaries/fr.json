@@ -25,7 +25,8 @@
     "title": "Notre Carte",
     "addButton": "+ Ajouter",
     "priceRestaurant": "Rest.",
-    "priceTraiteur": "Trait."
+    "priceTraiteur": "Trait.",
+    "dish": "Plat"
   },
   "events": {
     "title": "Événements",
