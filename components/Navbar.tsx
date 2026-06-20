@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useTheme } from './ThemeProvider';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -123,7 +123,9 @@ export default function Navbar() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
               )}
             </button>
-            <UserButton />
+            <Suspense fallback={<div className="w-16 h-5" />}>
+              <UserButton />
+            </Suspense>
           </div>
 
           <button
@@ -165,7 +167,7 @@ export default function Navbar() {
               </button>
             ))}
           </div>
-          <div className="mt-4"><UserButton /></div>
+          <div className="mt-4"><Suspense fallback={<div className="w-16 h-5" />}><UserButton /></Suspense></div>
         </div>
       )}
     </>
