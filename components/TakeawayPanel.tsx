@@ -2,12 +2,33 @@
 import { useState, useRef, useEffect } from 'react';
 import { useOrder } from './OrderProvider';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useUser } from '@/components/UserProvider';
+import SignInModal from '@/components/SignInModal';
 
 type Step = 'cart' | 'details' | 'otp' | 'success';
+
+function SignInNudge() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-6 p-4 border border-border rounded-lg bg-surface text-center space-y-3">
+      <p className="text-sm text-text-muted">Sign in to skip email verification</p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-sm text-accent hover:underline"
+      >
+        Sign in with Google or Facebook
+      </button>
+      <SignInModal open={open} onClose={() => setOpen(false)} />
+      <p className="text-xs text-text-muted">Or continue with email code below</p>
+    </div>
+  );
+}
 
 export default function TakeawayPanel() {
   const { items, updateQuantity, removeItem, clearOrder, total } = useOrder();
   const { locale, dict } = useLanguage();
+  const { user } = useUser();
   const t = (dict as any).order as Record<string, string>;
 
   const [open, setOpen] = useState(false);
@@ -18,6 +39,14 @@ export default function TakeawayPanel() {
   const [phone, setPhone] = useState('');
   const [sending, setSending] = useState(false);
   const [detailsError, setDetailsError] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      const fullName = (user.user_metadata?.full_name as string | undefined) ?? '';
+      setName(fullName || user.email?.split('@')[0] || '');
+      setEmail(user.email ?? '');
+    }
+  }, [user]);
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [verifying, setVerifying] = useState(false);
@@ -75,6 +104,36 @@ export default function TakeawayPanel() {
     e.preventDefault();
     setSending(true);
     setDetailsError('');
+
+    // Signed-in users skip OTP and submit immediately
+    if (user) {
+      try {
+        const res = await fetch('/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: name,
+            customerPhone: phone || undefined,
+            items,
+            total,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setDetailsError(data.error || 'Error');
+          return;
+        }
+        clearOrder();
+        setStep('success');
+      } catch {
+        setDetailsError('Network error');
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
+    // Unauthenticated: send OTP
     try {
       const res = await fetch('/api/otp/send', {
         method: 'POST',
@@ -283,11 +342,11 @@ export default function TakeawayPanel() {
                   <p className="text-xs text-text-muted leading-relaxed">{t.otpNote}</p>
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-text-muted mb-1.5">{t.customerName} *</label>
-                    <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full bg-transparent border border-border rounded-sm px-4 py-2.5 text-sm text-text focus:outline-none focus:border-accent transition-colors" />
+                    <input type="text" required value={name} onChange={e => !user && setName(e.target.value)} readOnly={!!user} className={`w-full bg-transparent border border-border rounded-sm px-4 py-2.5 text-sm text-text focus:outline-none focus:border-accent transition-colors${user ? ' opacity-60 cursor-not-allowed' : ''}`} />
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-text-muted mb-1.5">{t.customerEmail} *</label>
-                    <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border border-border rounded-sm px-4 py-2.5 text-sm text-text focus:outline-none focus:border-accent transition-colors" />
+                    <input type="email" required value={email} onChange={e => !user && setEmail(e.target.value)} readOnly={!!user} className={`w-full bg-transparent border border-border rounded-sm px-4 py-2.5 text-sm text-text focus:outline-none focus:border-accent transition-colors${user ? ' opacity-60 cursor-not-allowed' : ''}`} />
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-text-muted mb-1.5">{t.customerPhone}</label>
@@ -303,7 +362,7 @@ export default function TakeawayPanel() {
                 </div>
                 <div className="px-6 py-4 border-t border-border shrink-0">
                   <button type="submit" disabled={sending} className="w-full py-3 text-sm uppercase tracking-wider bg-accent text-bg hover:bg-accent/90 transition-colors disabled:opacity-50">
-                    {sending ? t.sending : t.sendOtp}
+                    {sending ? t.sending : user ? (t.placeOrder || 'Place order') : t.sendOtp}
                   </button>
                 </div>
               </form>
@@ -311,6 +370,7 @@ export default function TakeawayPanel() {
 
             {step === 'otp' && (
               <div className="flex flex-col flex-1 px-6 py-6">
+                {!user && <SignInNudge />}
                 <p className="text-sm text-text-muted mb-1">{t.otpSentTo}</p>
                 <p className="text-sm font-medium text-accent mb-8 truncate">{email}</p>
                 <p className="text-xs uppercase tracking-widest text-text-muted mb-4">{t.otpLabel}</p>
