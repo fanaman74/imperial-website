@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 /**
  * Simple in-memory rate limiter for API routes.
@@ -47,12 +48,32 @@ function getClientKey(req: NextRequest): string {
   return ip;
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Refresh Supabase Auth session on every request so tokens don't expire
+  let response = NextResponse.next({ request: { headers: req.headers } });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return req.cookies.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          response = NextResponse.next({ request: { headers: req.headers } });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+  await supabase.auth.getUser();
 
   // Only rate-limit API routes
   if (!pathname.startsWith('/api/')) {
-    return NextResponse.next();
+    return response;
   }
 
   const config = ROUTE_LIMITS[pathname] || DEFAULT_LIMIT;
@@ -66,12 +87,12 @@ export function middleware(req: NextRequest) {
 
   if (!entry || now > entry.resetTime) {
     rateLimitMap.set(limitKey, { count: 1, resetTime: now + config.windowMs });
-    return NextResponse.next();
+    return response;
   }
 
   entry.count++;
 
-  if (entry.count > config.maxRequests) {
+  if (entry.count >= config.maxRequests) {
     const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -88,7 +109,6 @@ export function middleware(req: NextRequest) {
   }
 
   const remaining = Math.max(0, config.maxRequests - entry.count);
-  const response = NextResponse.next();
   response.headers.set('X-RateLimit-Limit', String(config.maxRequests));
   response.headers.set('X-RateLimit-Remaining', String(remaining));
   response.headers.set('X-RateLimit-Reset', String(entry.resetTime));
