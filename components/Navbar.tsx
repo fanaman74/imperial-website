@@ -5,6 +5,7 @@ import { useTheme } from './ThemeProvider';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '@/lib/i18n/config';
+import UserButton from '@/components/UserButton';
 
 const navLinks = [
   { key: 'home', href: '#accueil', anchor: true },
@@ -122,6 +123,7 @@ export default function Navbar() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
               )}
             </button>
+            <UserButton />
           </div>
 
           <button
@@ -163,6 +165,7 @@ export default function Navbar() {
               </button>
             ))}
           </div>
+          <div className="mt-4"><UserButton /></div>
         </div>
       )}
     </>
