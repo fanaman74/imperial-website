@@ -1,15 +1,5 @@
-import {
-  createBrowserClient as createSSRBrowserClient,
-  createServerClient as createSSRServerClient,
-} from '@supabase/ssr';
+import { createServerClient as createSSRServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-
-export function createBrowserClient() {
-  return createSSRBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
 
 export async function createUserServerClient() {
   const cookieStore = await cookies();

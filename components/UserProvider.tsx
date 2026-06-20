@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { createBrowserClient } from '@/lib/supabase-ssr';
+import { createBrowserClient } from '@/lib/supabase-browser';
 
 interface UserContextValue {
   user: User | null;

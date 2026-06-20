@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/components/UserProvider';
-import { createBrowserClient } from '@/lib/supabase-ssr';
+import { createBrowserClient } from '@/lib/supabase-browser';
 import SignInModal from '@/components/SignInModal';
 
 export default function UserButton() {

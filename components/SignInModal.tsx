@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { createBrowserClient } from '@/lib/supabase-ssr';
+import { createBrowserClient } from '@/lib/supabase-browser';
 
 interface SignInModalProps {
   open: boolean;
