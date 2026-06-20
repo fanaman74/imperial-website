@@ -128,7 +128,7 @@ export default async function AdminDashboard() {
               {(orders || []).map((o: any) => (
                 <tr key={o.id} className="border-b border-border/50">
                   <td className="py-2 pr-4">{new Date(o.created_at).toLocaleDateString()}</td>
-                  <td className="py-2 pr-4">{o.customer_name}</td>
+                  <td className="py-2 pr-4">{o.name}</td>
                   <td className="py-2 pr-4">{Number(o.total).toFixed(2)}&euro;</td>
                   <td className="py-2 pr-4">{Array.isArray(o.items) ? o.items.length : 0}</td>
                   <td className="py-2 pr-4">
