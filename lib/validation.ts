@@ -32,6 +32,24 @@ export const otpVerifySchema = z.object({
   locale: z.enum(LOCALES).optional(),
 });
 
+export const authenticatedOrderSchema = z.object({
+  customerName: z.string().min(1).max(200),
+  customerPhone: z.string().max(30).optional(),
+  items: z.array(cartItemSchema).min(1).max(50),
+  total: z.number().min(0).max(99999),
+});
+
+export const authenticatedReservationSchema = z.object({
+  guests: z.number().int().min(1).max(50),
+  date: z.string().max(20),
+  time: z.string().max(10),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().max(100).optional().default(''),
+  phone: z.string().max(30).optional(),
+  specialRequests: z.string().max(2000).optional(),
+  locale: z.enum(LOCALES).optional(),
+});
+
 export const reservationSchema = z.object({
   guests: z.number().int().min(1).max(50),
   date: z.string().max(20),

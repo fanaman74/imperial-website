@@ -13,6 +13,8 @@ import {
   ORDER_STATUSES,
   EVENT_REQUEST_STATUSES,
   EVENT_TYPES,
+  authenticatedOrderSchema,
+  authenticatedReservationSchema,
 } from './validation';
 
 describe('emailSchema', () => {
@@ -187,6 +189,38 @@ describe('menuItemSchema', () => {
       price_takeaway: null,
       featured_image: null,
     }).success).toBe(true);
+  });
+});
+
+describe('authenticatedOrderSchema', () => {
+  it('accepts valid order without code', () => {
+    const result = authenticatedOrderSchema.safeParse({
+      customerName: 'Alice',
+      items: [{ id: 'a', name: 'Spring Rolls', quantity: 2, price: 7.5 }],
+      total: 15,
+    });
+    expect(result.success).toBe(true);
+  });
+  it('rejects empty items', () => {
+    const result = authenticatedOrderSchema.safeParse({
+      customerName: 'Alice',
+      items: [],
+      total: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('authenticatedReservationSchema', () => {
+  it('accepts valid reservation without code', () => {
+    const result = authenticatedReservationSchema.safeParse({
+      guests: 2,
+      date: '2026-07-01',
+      time: '19:00',
+      firstName: 'Alice',
+      email: 'alice@example.com',
+    });
+    expect(result.success).toBe(true);
   });
 });
 
