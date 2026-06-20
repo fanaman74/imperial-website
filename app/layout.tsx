@@ -4,6 +4,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { OrderProvider } from '@/components/OrderProvider';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
+import { UserProvider } from '@/components/UserProvider';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -33,9 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-body bg-bg text-text">
         <LanguageProvider>
           <ThemeProvider>
-            <OrderProvider>
-              {children}
-            </OrderProvider>
+            <UserProvider>
+              <OrderProvider>
+                {children}
+              </OrderProvider>
+            </UserProvider>
           </ThemeProvider>
         </LanguageProvider>
       </body>
