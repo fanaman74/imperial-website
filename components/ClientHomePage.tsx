@@ -5,7 +5,6 @@ import ScrollReveal from '@/components/ScrollReveal';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import About from '@/components/About';
-import FeaturedDishes from '@/components/FeaturedDishes';
 import Menu from '@/components/Menu';
 import Events from '@/components/Events';
 import ReviewsCarousel from '@/components/ReviewsCarousel';
@@ -15,18 +14,16 @@ import Footer from '@/components/Footer';
 import TakeawayPanel from '@/components/TakeawayPanel';
 import CartSignInPrompt from '@/components/CartSignInPrompt';
 import FixedMenus from '@/components/FixedMenus';
-import type { Category, Dish } from '@/lib/types';
+import type { Category } from '@/lib/types';
 
 interface ClientHomePageProps {
   initialCategories: Category[];
-  initialFeatured: Dish[];
   initialLocale: string;
 }
 
-export default function ClientHomePage({ initialCategories, initialFeatured, initialLocale }: ClientHomePageProps) {
+export default function ClientHomePage({ initialCategories, initialLocale }: ClientHomePageProps) {
   const { locale, dict } = useLanguage();
   const [menuData, setMenuData] = useState<Category[]>(initialCategories);
-  const [featured, setFeatured] = useState<Dish[]>(initialFeatured);
   const [loading, setLoading] = useState(false);
   // Locale the current menuData was loaded for — seeded from the server render.
   const loadedLocale = useRef(initialLocale);
@@ -38,9 +35,8 @@ export default function ClientHomePage({ initialCategories, initialFeatured, ini
     setLoading(true);
     fetch(`/api/menu?locale=${locale}`, { signal: controller.signal })
       .then(r => r.json())
-      .then(({ categories, featured }) => {
+      .then(({ categories }) => {
         setMenuData(categories || []);
-        setFeatured(featured || []);
         loadedLocale.current = locale;
         setLoading(false);
       })
@@ -53,9 +49,6 @@ export default function ClientHomePage({ initialCategories, initialFeatured, ini
       <Navbar />
       <Hero dict={dict.hero} />
       <ScrollReveal><About dict={dict.about} /></ScrollReveal>
-      <ScrollReveal>
-        <FeaturedDishes dict={dict.featured} dishes={featured} />
-      </ScrollReveal>
       {!loading && <Menu categories={menuData} dict={dict.menu} />}
       {loading && (
         <section id="menu" className="py-24 px-6 flex justify-center items-center min-h-[300px]">

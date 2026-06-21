@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserServerClient } from '@/lib/supabase-ssr';
+import { createServerClient } from '@/lib/supabase-server';
 import { authenticatedOrderSchema } from '@/lib/validation';
 import { recomputeOrder, OrderPricingError } from '@/lib/orders';
 import { buildOrderEmails } from '@/lib/order-email';
@@ -34,7 +35,9 @@ export async function POST(req: NextRequest) {
       throw e;
     }
 
-    const { data: order, error: orderError } = await supabase
+    // Use service role for the INSERT+SELECT to bypass the RLS SELECT policy
+    // (auth.uid() = user_id blocks anon-key reads even after a successful insert).
+    const { data: order, error: orderError } = await createServerClient()
       .from('imperial_orders')
       .insert({
         name: customerName,
