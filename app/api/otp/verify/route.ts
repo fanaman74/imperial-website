@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { consumeOtp } from '@/lib/otp';
 import { otpVerifySchema } from '@/lib/validation';
 import { escapeHtml } from '@/lib/utils';
@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: otpResult.reason }, { status: 400 });
     }
 
-    // Insert the order
-    const supabase = createPublicClient();
+    // Insert the order — use service role to bypass RLS on the SELECT after INSERT
+    const supabase = createServerClient();
     const { data: order, error: orderError } = await supabase
       .from('imperial_orders')
       .insert({
