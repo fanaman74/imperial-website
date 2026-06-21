@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createUserServerClient } from '@/lib/supabase-ssr';
 import ProfileForm from '@/components/ProfileForm';
+import ReorderButton from '@/components/ReorderButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +71,7 @@ export default async function AccountPage({
         </div>
 
         {activeTab === 'orders' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {!orders?.length ? (
               <div className="text-center py-16 space-y-3">
                 <p className="text-text-muted">No orders yet.</p>
@@ -79,31 +80,50 @@ export default async function AccountPage({
                 </Link>
               </div>
             ) : (
-              orders.map(order => (
-                <div key={order.id} className="bg-surface rounded-lg p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-text-muted">
-                      {new Date(order.created_at).toLocaleDateString('fr-BE', {
-                        day: 'numeric', month: 'long', year: 'numeric',
-                      })}
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${STATUS_COLORS[order.status] || 'bg-surface text-text-muted'}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {(order.items as { name: string; quantity: number; price: number }[]).map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm">
-                        <span>{item.quantity}× {item.name}</span>
-                        <span className="text-text-muted">{(item.price * item.quantity).toFixed(2)}€</span>
+              orders.map(order => {
+                const items = order.items as { id: string; name: string; quantity: number; price: number }[];
+                return (
+                  <div key={order.id} className="border border-border rounded-lg overflow-hidden">
+                    {/* Order header */}
+                    <div className="flex items-center justify-between px-5 py-3 bg-surface border-b border-border">
+                      <div>
+                        <span className="text-sm font-medium">
+                          {new Date(order.created_at).toLocaleDateString('fr-BE', {
+                            day: 'numeric', month: 'long', year: 'numeric',
+                          })}
+                        </span>
+                        <span className="text-text-muted text-xs ml-2">
+                          {new Date(order.created_at).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
-                    ))}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[order.status] || 'bg-surface text-text-muted'}`}>
+                        {order.status}
+                      </span>
+                    </div>
+
+                    {/* Items */}
+                    <div className="px-5 py-4 space-y-2">
+                      {items.map((item, i) => (
+                        <div key={i} className="flex justify-between text-sm">
+                          <span>
+                            <span className="font-medium">{item.quantity}×</span>{' '}
+                            <span className="text-text">{item.name}</span>
+                          </span>
+                          <span className="text-text-muted tabular-nums">{(item.price * item.quantity).toFixed(2)}€</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Footer: total + reorder */}
+                    <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-surface/50">
+                      <ReorderButton items={items} />
+                      <span className="text-sm font-semibold text-accent tabular-nums">
+                        {Number(order.total).toFixed(2)}€
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-end border-t border-border pt-2">
-                    <span className="text-sm font-semibold text-accent">{Number(order.total).toFixed(2)}€</span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
