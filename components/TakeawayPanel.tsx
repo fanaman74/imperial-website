@@ -3,9 +3,23 @@ import { useState, useRef, useEffect } from 'react';
 import { useOrder } from './OrderProvider';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useUser } from '@/components/UserProvider';
-import { createBrowserClient } from '@/lib/supabase-browser';
+import SignInModal from '@/components/SignInModal';
 
 type Step = 'cart' | 'details' | 'otp' | 'success';
+
+function SignInNudge() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-6 p-4 border border-border rounded-lg bg-surface text-center space-y-3">
+      <p className="text-sm text-text-muted">Connectez-vous pour éviter la vérification par email</p>
+      <button type="button" onClick={() => setOpen(true)} className="text-sm text-accent hover:underline">
+        Se connecter / Créer un compte
+      </button>
+      <SignInModal open={open} onClose={() => setOpen(false)} />
+      <p className="text-xs text-text-muted">Ou continuez avec le code ci-dessous</p>
+    </div>
+  );
+}
 
 export default function TakeawayPanel() {
   const { items, updateQuantity, removeItem, clearOrder, total } = useOrder();
@@ -42,20 +56,15 @@ export default function TakeawayPanel() {
     if (!open) return;
     const panel = panelRef.current;
     if (!panel) return;
-
     const focusable = panel.querySelectorAll<HTMLElement>('button, input, a, select');
     focusable[0]?.focus();
-
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') { close(); return; }
       if (e.key === 'Tab' && focusable.length > 0) {
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault(); last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault(); first.focus();
-        }
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -72,38 +81,40 @@ export default function TakeawayPanel() {
     setDetailsError(''); setOtpError('');
   }
 
-  async function placeOrder() {
-    const res = await fetch('/api/order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customerName: name, customerPhone: phone || undefined, items, total }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    clearOrder();
-    setStep('success');
-  }
-
   async function handleDetails(e: React.FormEvent) {
     e.preventDefault();
     setSending(true);
     setDetailsError('');
 
+    // Signed-in users skip OTP — session cookie is present
     if (user) {
-      try { await placeOrder(); }
-      catch (err: unknown) { setDetailsError(err instanceof Error ? err.message : 'Error'); }
-      finally { setSending(false); }
+      try {
+        const res = await fetch('/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerName: name, customerPhone: phone || undefined, items, total }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setDetailsError(data.error || 'Error'); return; }
+        clearOrder();
+        setStep('success');
+      } catch {
+        setDetailsError('Network error');
+      } finally {
+        setSending(false);
+      }
       return;
     }
 
-    // Guest: send Supabase email OTP
+    // Guests: send branded 6-digit code via Resend
     try {
-      const supabase = createBrowserClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true },
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
       });
-      if (error) { setDetailsError(error.message); return; }
+      const data = await res.json();
+      if (!res.ok) { setDetailsError(data.error || 'Error'); return; }
       setStep('otp');
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch {
@@ -116,12 +127,12 @@ export default function TakeawayPanel() {
   async function handleResend() {
     setSending(true);
     try {
-      const supabase = createBrowserClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true },
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
       });
-      if (error) { setOtpError(error.message); return; }
+      if (!res.ok) { setOtpError(t.otpError || 'Error'); return; }
       setOtp(['', '', '', '', '', '']);
       setOtpError('');
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
@@ -159,16 +170,20 @@ export default function TakeawayPanel() {
     setVerifying(true);
     setOtpError('');
     try {
-      const supabase = createBrowserClient();
-      const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
-      if (error) {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, customerName: name, customerPhone: phone || undefined, items, total, locale }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
         setOtpError(t.otpError || 'Code incorrect ou expiré');
         setOtp(['', '', '', '', '', '']);
         setTimeout(() => inputRefs.current[0]?.focus(), 50);
         return;
       }
-      // OTP verified → user now has a session → place order
-      await placeOrder();
+      clearOrder();
+      setStep('success');
     } catch {
       setOtpError('Network error');
     } finally {
@@ -225,9 +240,7 @@ export default function TakeawayPanel() {
                   {step === 'success' && t.successTitle}
                 </h3>
               </div>
-              <button onClick={close} className="text-text-muted hover:text-text transition-colors text-sm">
-                {t.close}
-              </button>
+              <button onClick={close} className="text-text-muted hover:text-text transition-colors text-sm">{t.close}</button>
             </div>
 
             {step === 'cart' && (
@@ -277,11 +290,7 @@ export default function TakeawayPanel() {
             {step === 'details' && (
               <form onSubmit={handleDetails} className="flex flex-col flex-1 overflow-y-auto">
                 <div className="flex-1 px-6 py-6 space-y-4">
-                  {!user && (
-                    <p className="text-xs text-text-muted leading-relaxed">
-                      Un code de vérification sera envoyé à votre adresse email.
-                    </p>
-                  )}
+                  <p className="text-xs text-text-muted leading-relaxed">{t.otpNote}</p>
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-text-muted mb-1.5">{t.customerName} *</label>
                     <input type="text" required value={name} onChange={e => !user && setName(e.target.value)} readOnly={!!user} className={`w-full bg-transparent border border-border rounded-sm px-4 py-2.5 text-sm text-text focus:outline-none focus:border-accent transition-colors${user ? ' opacity-60 cursor-not-allowed' : ''}`} />
@@ -312,6 +321,7 @@ export default function TakeawayPanel() {
 
             {step === 'otp' && (
               <div className="flex flex-col flex-1 px-6 py-6">
+                {!user && <SignInNudge />}
                 <p className="text-sm text-text-muted mb-1">{t.otpSentTo}</p>
                 <p className="text-sm font-medium text-accent mb-8 truncate">{email}</p>
                 <p className="text-xs uppercase tracking-widest text-text-muted mb-4">{t.otpLabel}</p>
@@ -364,7 +374,6 @@ export default function TakeawayPanel() {
                 </button>
               </div>
             )}
-
           </div>
         </>
       )}
