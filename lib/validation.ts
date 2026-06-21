@@ -17,7 +17,7 @@ export const otpSendSchema = z.object({
 });
 
 export const cartItemSchema = z.object({
-  id: z.string().max(100),
+  id: z.union([z.string(), z.number()]).transform(v => String(v)).pipe(z.string().max(100)),
   name: z.string().max(200),
   quantity: z.number().int().min(1).max(99),
   price: z.number().min(0).max(9999),

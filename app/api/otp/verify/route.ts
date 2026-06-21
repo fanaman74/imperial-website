@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = otpVerifySchema.safeParse(body);
     if (!parsed.success) {
+      console.error('[otp/verify] schema error:', JSON.stringify(parsed.error.issues));
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
     const { email, code, customerName, customerPhone, items, total } = parsed.data;
