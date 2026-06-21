@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createUserServerClient } from '@/lib/supabase-ssr';
+import ProfileForm from '@/components/ProfileForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,18 +44,14 @@ export default async function AccountPage({
       .limit(50),
   ]);
 
-  const fullName = (user.user_metadata?.full_name as string | undefined) ?? user.email ?? '';
+  const fullName = (user.user_metadata?.full_name as string | undefined) ?? '';
 
   return (
     <div className="min-h-screen bg-bg pt-[72px]">
-      <div className="max-w-2xl mx-auto px-6 py-16">
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="font-display text-3xl italic">My account</h1>
-            <p className="text-text-muted text-sm mt-1">{user.email}</p>
-          </div>
-          <span className="text-text-muted text-sm">{fullName}</span>
-        </div>
+      <div className="max-w-2xl mx-auto px-6 py-16 space-y-10">
+        <h1 className="font-display text-3xl italic">My account</h1>
+
+        <ProfileForm initialName={fullName} email={user.email ?? ''} />
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border mb-8">
