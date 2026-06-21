@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/lib/supabase-server';
+import { createPublicClient, createServerClient } from '@/lib/supabase-server';
 import { hashToken, escapeHtml } from '@/lib/utils';
 import { otpSendSchema } from '@/lib/validation';
 import { OTP_TTL_MS } from '@/lib/otp';
@@ -7,6 +7,9 @@ import { randomInt } from 'crypto';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
+
+// Max OTPs per email per hour. Protects against email-bombing third parties.
+const MAX_PER_EMAIL_PER_HOUR = 5;
 
 function generateOTP(): string {
   return randomInt(100000, 1000000).toString();
@@ -16,23 +19,26 @@ const i18n = {
   fr: {
     subject: (code: string) => `${code} — Votre code de vérification Imperial`,
     greeting: (name: string) => name ? `Bonjour ${name},` : '',
-    body: 'Voici votre code pour confirmer votre commande en ligne :',
-    expiry: 'Ce code expire dans <strong>10 minutes</strong>.',
-    ignore: 'Si vous n’avez pas passé de commande, ignorez cet email.',
+    body: 'Voici votre code pour confirmer votre commande en ligne :',
+    expiry: 'Ce code expire dans <strong>10 minutes</strong>.',
+    ignore: 'Si vous n\'avez pas passé de commande, ignorez cet email.',
+    rateLimitError: 'Trop de codes envoyés. Réessayez dans une heure.',
   },
   nl: {
     subject: (code: string) => `${code} — Uw verificatiecode Imperial`,
     greeting: (name: string) => name ? `Hallo ${name},` : '',
-    body: 'Hier is uw code om uw bestelling te bevestigen :',
-    expiry: 'Deze code vervalt over <strong>10 minuten</strong>.',
+    body: 'Hier is uw code om uw bestelling te bevestigen :',
+    expiry: 'Deze code vervalt over <strong>10 minuten</strong>.',
     ignore: 'Als u geen bestelling heeft geplaatst, kunt u deze e-mail negeren.',
+    rateLimitError: 'Te veel codes verzonden. Probeer het over een uur opnieuw.',
   },
   en: {
     subject: (code: string) => `${code} — Your Imperial verification code`,
     greeting: (name: string) => name ? `Hello ${name},` : '',
     body: 'Here is your code to confirm your order:',
-    expiry: 'This code expires in <strong>10 minutes</strong>.',
-    ignore: 'If you didn’t place an order, you can ignore this email.',
+    expiry: 'This code expires in <strong>10 minutes</strong>.',
+    ignore: 'If you didn\'t place an order, you can ignore this email.',
+    rateLimitError: 'Too many codes sent. Please try again in an hour.',
   },
 };
 
@@ -45,6 +51,20 @@ export async function POST(req: NextRequest) {
     }
     const { email, name, locale } = parsed.data;
     const lang = i18n[locale ?? 'fr'];
+
+    // Rate limit: count OTPs sent to this email in the last hour.
+    // Service role bypasses RLS so the count is accurate.
+    const supabaseAdmin = createServerClient();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin
+      .from('imperial_otps')
+      .select('id', { count: 'exact', head: true })
+      .eq('email', email)
+      .gte('created_at', oneHourAgo);
+
+    if ((count ?? 0) >= MAX_PER_EMAIL_PER_HOUR) {
+      return NextResponse.json({ error: lang.rateLimitError }, { status: 429 });
+    }
 
     const code = generateOTP();
     const codeHash = hashToken(code.toLowerCase());

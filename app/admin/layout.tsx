@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { verifyAdminSession } from '@/lib/admin-auth';
 import AdminNav from './AdminNav';
 
@@ -8,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const isAuthenticated = token ? await verifyAdminSession(token) : false;
 
   if (!isAuthenticated) {
-    return <>{children}</>;
+    redirect('/admin/login');
   }
 
   return (

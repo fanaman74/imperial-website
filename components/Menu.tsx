@@ -98,7 +98,7 @@ export default function Menu({ categories, dict }: MenuProps) {
                     aria-label={`Add ${item.name} to cart`}
                     className="w-7 h-7 rounded-full border border-border flex items-center justify-center
                       text-text-muted hover:border-accent hover:text-accent hover:bg-accent/10
-                      opacity-0 group-hover:opacity-100 focus:opacity-100
+                      sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100
                       transition-all duration-150"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

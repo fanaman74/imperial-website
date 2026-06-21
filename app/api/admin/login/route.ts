@@ -27,10 +27,15 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
 
     const supabase = createServerClient();
-    await supabase.from('imperial_admin_sessions').insert({
+    const { error: insertError } = await supabase.from('imperial_admin_sessions').insert({
       token_hash: tokenHash,
       expires_at: expiresAt.toISOString(),
     });
+
+    if (insertError) {
+      console.error('Session insert failed:', insertError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 
     const res = NextResponse.json({ success: true });
     res.cookies.set('imperial_admin_token', token, {

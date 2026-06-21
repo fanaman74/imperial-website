@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { consumeOtp } from '@/lib/otp';
+import { recomputeOrder, OrderPricingError } from '@/lib/orders';
+import { buildOrderEmails } from '@/lib/order-email';
 import { otpVerifySchema } from '@/lib/validation';
-import { escapeHtml } from '@/lib/utils';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,19 @@ export async function POST(req: NextRequest) {
       console.error('[otp/verify] schema error:', JSON.stringify(parsed.error.issues));
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
-    const { email, code, customerName, customerPhone, items, total } = parsed.data;
+    const { email, code, customerName, customerPhone, locale } = parsed.data;
+
+    // Never trust client prices/total — recompute from authoritative DB prices.
+    // Done before consuming the OTP so a pricing failure doesn't burn the code.
+    let items, total;
+    try {
+      ({ items, total } = await recomputeOrder(parsed.data.items));
+    } catch (e) {
+      if (e instanceof OrderPricingError) {
+        return NextResponse.json({ error: 'Invalid items' }, { status: 400 });
+      }
+      throw e;
+    }
 
     // Verify and consume OTP using shared helper (handles brute-force lockout)
     const otpResult = await consumeOtp(email, code);
@@ -43,80 +56,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
-    // Send confirmation emails — fire and forget (don't block the response)
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const restaurantEmail = process.env.RESTAURANT_EMAIL || 'imperial@restaurant.be';
 
     if (resendKey) {
       const resend = new Resend(resendKey);
-      const firstName = escapeHtml(customerName?.split(' ')[0] || customerName || '');
+      const { customer, restaurant } = buildOrderEmails({
+        locale,
+        customerName: customerName || '',
+        email,
+        phone: customerPhone,
+        items,
+        total,
+      });
 
-      const itemRows = items
-        .map((i) => `<tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0">${i.quantity}×</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0">${escapeHtml(i.name)}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0e8e0;text-align:right">${(i.price * i.quantity).toFixed(2)}€</td>
-        </tr>`)
-        .join('');
-
-      const safeEmail = escapeHtml(email);
-      const safePhone = escapeHtml(customerPhone || '');
-      const orderHtml = (forRestaurant: boolean) => `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1412">
-          <div style="background:#c41e24;padding:24px 32px">
-            <h1 style="color:#fff;margin:0;font-size:20px;letter-spacing:2px">IMPERIAL</h1>
-            <p style="color:rgba(255,255,255,0.8);margin:4px 0 0;font-size:13px">
-              ${forRestaurant ? 'Nouvelle commande traiteur' : 'Confirmation de commande'}
-            </p>
-          </div>
-          <div style="padding:32px;background:#fff;border:1px solid #e8ddd4">
-            ${forRestaurant
-              ? `<p style="margin:0 0 16px"><strong>${escapeHtml(customerName)}</strong> — <a href="mailto:${safeEmail}" style="color:#c41e24">${safeEmail}</a>${safePhone ? ` — ${safePhone}` : ''}</p>`
-              : `<p style="margin:0 0 16px">Bonjour ${firstName},<br>Merci pour votre commande !</p>`
-            }
-            <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 16px">
-              <thead>
-                <tr style="background:#f0e8e0">
-                  <th style="padding:8px 12px;text-align:left;font-weight:600">Qté</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600">Article</th>
-                  <th style="padding:8px 12px;text-align:right;font-weight:600">Prix</th>
-                </tr>
-              </thead>
-              <tbody>${itemRows}</tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="2" style="padding:12px;font-weight:700;font-size:15px">Total</td>
-                  <td style="padding:12px;font-weight:700;font-size:15px;text-align:right;color:#c41e24">${Number(total).toFixed(2)}€</td>
-                </tr>
-              </tfoot>
-            </table>
-            ${!forRestaurant ? `
-              <div style="border-left:3px solid #c41e24;padding:12px 16px;background:#fdf8f5;font-size:13px;color:#6b5b4f">
-                <strong style="color:#1a1412">Restaurant Imperial</strong><br>
-                Romeinsesteenweg 220, 1800 Vilvoorde<br>
-                Tél : <a href="tel:+3222670270" style="color:#c41e24">02 267 02 70</a>
-              </div>` : ''}
-          </div>
-          <div style="padding:16px 32px;background:#f0e8e0;font-size:12px;color:#9a8878;text-align:center">
-            Restaurant Imperial — Vilvoorde, Belgique
-          </div>
-        </div>`;
-
-      // Fire-and-forget: don't block the response on email delivery
       Promise.all([
         resend.emails.send({
           from: `Imperial Website <${fromEmail}>`,
           to: [restaurantEmail],
-          subject: `Commande traiteur — ${customerName} (${Number(total).toFixed(2)}€)`,
-          html: orderHtml(true),
+          subject: restaurant.subject,
+          html: restaurant.html,
           replyTo: email,
         }),
         resend.emails.send({
           from: `Restaurant Imperial <${fromEmail}>`,
           to: [email],
-          subject: `Votre commande chez Imperial — confirmation`,
-          html: orderHtml(false),
+          subject: customer.subject,
+          html: customer.html,
         }),
       ]).catch(err => console.error('Email send error:', err));
     }

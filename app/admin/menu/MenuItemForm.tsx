@@ -18,6 +18,7 @@ export default function MenuItemForm({ itemId }: { itemId?: string }) {
   >({
     fr: { name: '', description: '' },
     nl: { name: '', description: '' },
+    en: { name: '', description: '' },
   });
   const [categoryId, setCategoryId] = useState('');
   const [num, setNum] = useState('');

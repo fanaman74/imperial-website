@@ -92,7 +92,7 @@ export default function TakeawayPanel() {
         const res = await fetch('/api/order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ customerName: name, customerPhone: phone || undefined, items, total }),
+          body: JSON.stringify({ customerName: name, customerPhone: phone || undefined, items, total, locale }),
         });
         const data = await res.json();
         if (!res.ok) { setDetailsError(data.error || 'Error'); return; }

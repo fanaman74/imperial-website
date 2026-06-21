@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import ScrollReveal from '@/components/ScrollReveal';
 import Navbar from '@/components/Navbar';
@@ -13,18 +13,27 @@ import FindUs from '@/components/FindUs';
 import Reservation from '@/components/Reservation';
 import Footer from '@/components/Footer';
 import TakeawayPanel from '@/components/TakeawayPanel';
-import CartToast from '@/components/CartToast';
 import CartSignInPrompt from '@/components/CartSignInPrompt';
 import FixedMenus from '@/components/FixedMenus';
 import type { Category, Dish } from '@/lib/types';
 
-export default function ClientHomePage() {
+interface ClientHomePageProps {
+  initialCategories: Category[];
+  initialFeatured: Dish[];
+  initialLocale: string;
+}
+
+export default function ClientHomePage({ initialCategories, initialFeatured, initialLocale }: ClientHomePageProps) {
   const { locale, dict } = useLanguage();
-  const [menuData, setMenuData] = useState<Category[]>([]);
-  const [featured, setFeatured] = useState<Dish[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [menuData, setMenuData] = useState<Category[]>(initialCategories);
+  const [featured, setFeatured] = useState<Dish[]>(initialFeatured);
+  const [loading, setLoading] = useState(false);
+  // Locale the current menuData was loaded for — seeded from the server render.
+  const loadedLocale = useRef(initialLocale);
 
   useEffect(() => {
+    // Server already rendered this locale's menu; no client fetch needed.
+    if (locale === loadedLocale.current) return;
     const controller = new AbortController();
     setLoading(true);
     fetch(`/api/menu?locale=${locale}`, { signal: controller.signal })
@@ -32,6 +41,7 @@ export default function ClientHomePage() {
       .then(({ categories, featured }) => {
         setMenuData(categories || []);
         setFeatured(featured || []);
+        loadedLocale.current = locale;
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -61,7 +71,6 @@ export default function ClientHomePage() {
       <Reservation dict={dict.reservation} locale={locale} />
       <Footer dict={{ nav: dict.nav, findUs: dict.findUs, footer: dict.footer }} />
       <TakeawayPanel />
-      <CartToast />
       <CartSignInPrompt />
     </>
   );

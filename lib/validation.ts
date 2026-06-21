@@ -38,6 +38,7 @@ export const authenticatedOrderSchema = z.object({
   customerPhone: z.string().max(30).optional(),
   items: z.array(cartItemSchema).min(1).max(50),
   total: z.number().min(0).max(99999),
+  locale: z.enum(LOCALES).optional(),
 });
 
 export const authenticatedReservationSchema = z.object({

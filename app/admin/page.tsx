@@ -112,7 +112,10 @@ export default async function AdminDashboard() {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-text mb-4">Recent Orders</h2>
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="text-lg font-semibold text-text">Recent Orders</h2>
+          <a href="/admin/orders" className="text-xs text-accent hover:underline">View all →</a>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -126,11 +129,29 @@ export default async function AdminDashboard() {
             </thead>
             <tbody>
               {(orders || []).map((o: any) => (
-                <tr key={o.id} className="border-b border-border/50">
-                  <td className="py-2 pr-4">{new Date(o.created_at).toLocaleDateString()}</td>
-                  <td className="py-2 pr-4">{o.name}</td>
-                  <td className="py-2 pr-4">{Number(o.total).toFixed(2)}&euro;</td>
-                  <td className="py-2 pr-4">{Array.isArray(o.items) ? o.items.length : 0}</td>
+                <tr key={o.id} className="border-b border-border/50 align-top">
+                  <td className="py-2 pr-4 whitespace-nowrap text-text-muted">{new Date(o.created_at).toLocaleDateString('fr-BE')}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap font-medium">{o.name || '—'}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap font-semibold">{Number(o.total).toFixed(2)}&euro;</td>
+                  <td className="py-2 pr-4">
+                    {Array.isArray(o.items) && o.items.length > 0 ? (
+                      <details className="cursor-pointer">
+                        <summary className="text-text-muted hover:text-text select-none">
+                          {o.items.length} item{o.items.length !== 1 ? 's' : ''}
+                        </summary>
+                        <ul className="mt-1.5 space-y-0.5 pl-1">
+                          {o.items.map((item: any, i: number) => (
+                            <li key={i} className="text-xs text-text-muted">
+                              <span className="font-medium text-text">{item.quantity}×</span> {item.name}
+                              <span className="ml-1 opacity-60">({(item.price * item.quantity).toFixed(2)}€)</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : (
+                      <span className="text-text-muted">—</span>
+                    )}
+                  </td>
                   <td className="py-2 pr-4">
                     <StatusDropdown id={o.id} currentStatus={o.status || 'pending'} endpoint="/api/admin/orders" options={['pending', 'preparing', 'ready', 'completed', 'cancelled']} />
                   </td>
