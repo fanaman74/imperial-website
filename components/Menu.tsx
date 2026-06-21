@@ -1,6 +1,20 @@
 'use client';
 import { useState, useEffect } from 'react';
 import type { Category } from '@/lib/types';
+import { useOrder } from './OrderProvider';
+
+function WithChili({ text }: { text: string }) {
+  const parts = text.split(/(\(épicée\))/gi);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /\(épicée\)/i.test(part)
+          ? <span key={i} title="épicée" className="ml-1">🌶️</span>
+          : part
+      )}
+    </>
+  );
+}
 
 type MenuDict = {
   title: string;
@@ -15,6 +29,7 @@ interface MenuProps {
 
 export default function Menu({ categories, dict }: MenuProps) {
   const [activeCategoryId, setActiveCategoryId] = useState(categories[0]?.id || '');
+  const { addItem } = useOrder();
 
   // Sync activeCategoryId when categories change (e.g. locale switch, async data load)
   useEffect(() => {
@@ -59,18 +74,38 @@ export default function Menu({ categories, dict }: MenuProps) {
               <span className="w-10">#</span>
               <span className="flex-1">{dict.dish || "Plat"}</span>
               <span className="w-16 text-center">{dict.priceRestaurant}</span>
+              <span className="w-10" />
             </div>
 
             {activeCategory.items.map(item => (
-              <div key={item.id} className="flex items-center py-3 border-b border-border/50">
+              <div key={item.id} className="flex items-center py-3 border-b border-border/50 group">
                 <span className="w-10 text-text-muted text-sm">{item.num}</span>
                 <div className="flex-1 min-w-0 pr-4">
-                  <span className="text-sm font-medium">{item.name}</span>
+                  <span className="text-sm font-medium"><WithChili text={item.name} /></span>
                   {item.description && (
                     <span className="text-text-muted text-xs ml-2">{item.description}</span>
                   )}
                 </div>
                 <span className="w-16 text-center text-sm">{item.priceRestaurant.toFixed(2)}&euro;</span>
+                <div className="w-10 flex justify-end">
+                  <button
+                    onClick={() => addItem({
+                      id: item.id,
+                      name: item.name,
+                      desc: item.description,
+                      price: item.priceRestaurant,
+                    })}
+                    aria-label={`Add ${item.name} to cart`}
+                    className="w-7 h-7 rounded-full border border-border flex items-center justify-center
+                      text-text-muted hover:border-accent hover:text-accent hover:bg-accent/10
+                      opacity-0 group-hover:opacity-100 focus:opacity-100
+                      transition-all duration-150"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>

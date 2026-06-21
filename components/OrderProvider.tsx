@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useState, useMemo, useRef, ReactNode } from 'react';
 
 type OrderItem = {
   id: string;
@@ -16,12 +16,15 @@ type OrderContextType = {
   updateQuantity: (itemId: string, quantity: number) => void;
   clearOrder: () => void;
   total: number;
+  lastAdded: OrderItem | null;
 };
 
 const OrderContext = createContext<OrderContextType | null>(null);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [lastAdded, setLastAdded] = useState<OrderItem | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function addItem(menuItem: Omit<OrderItem, 'quantity'>) {
     setItems((prev) => {
@@ -33,6 +36,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...menuItem, quantity: 1 }];
     });
+    setLastAdded({ ...menuItem, quantity: 1 });
+    if (clearTimer.current) clearTimeout(clearTimer.current);
+    clearTimer.current = setTimeout(() => setLastAdded(null), 2500);
   }
 
   function removeItem(itemId: string) {
@@ -59,9 +65,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ items, addItem, removeItem, updateQuantity, clearOrder, total }),
+    () => ({ items, addItem, removeItem, updateQuantity, clearOrder, total, lastAdded }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, total]
+    [items, total, lastAdded]
   );
 
   return (

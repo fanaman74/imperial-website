@@ -13,6 +13,8 @@ import FindUs from '@/components/FindUs';
 import Reservation from '@/components/Reservation';
 import Footer from '@/components/Footer';
 import TakeawayPanel from '@/components/TakeawayPanel';
+import CartToast from '@/components/CartToast';
+import CartSignInPrompt from '@/components/CartSignInPrompt';
 import FixedMenus from '@/components/FixedMenus';
 import type { Category, Dish } from '@/lib/types';
 
@@ -59,6 +61,8 @@ export default function ClientHomePage() {
       <Reservation dict={dict.reservation} locale={locale} />
       <Footer dict={{ nav: dict.nav, findUs: dict.findUs, footer: dict.footer }} />
       <TakeawayPanel />
+      <CartToast />
+      <CartSignInPrompt />
     </>
   );
 }
