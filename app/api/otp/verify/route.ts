@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
 
     // Verify and consume OTP using shared helper (handles brute-force lockout)
     const otpResult = await consumeOtp(email, code);
+    console.log('[otp/verify]', { email, codeLen: code.length, result: otpResult });
     if (!otpResult.valid) {
       return NextResponse.json({ error: otpResult.reason }, { status: 400 });
     }

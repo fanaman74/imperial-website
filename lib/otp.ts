@@ -1,4 +1,4 @@
-import { createPublicClient } from './supabase-server';
+import { createServerClient } from './supabase-server';
 import { hashToken } from './utils';
 
 export const OTP_TTL_MS = 10 * 60 * 1000;
@@ -12,7 +12,7 @@ export const OTP_MAX_ATTEMPTS = 5;
 export async function consumeOtp(email: string, code: string): Promise<
   { valid: true } | { valid: false; reason: 'invalid' | 'expired' | 'locked' }
 > {
-  const supabase = createPublicClient();
+  const supabase = createServerClient();
   const codeHash = hashToken(code.toLowerCase());
 
   const { data: otps } = await supabase
@@ -47,6 +47,13 @@ export async function consumeOtp(email: string, code: string): Promise<
     return { valid: false, reason: 'expired' };
   }
 
-  await supabase.from('imperial_otps').update({ used: true }).eq('id', otp.id);
+  const { data: consumed } = await supabase
+    .from('imperial_otps')
+    .update({ used: true })
+    .eq('id', otp.id)
+    .eq('used', false)
+    .select('id');
+
+  if (!consumed?.length) return { valid: false, reason: 'invalid' };
   return { valid: true };
 }
