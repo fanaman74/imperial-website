@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
-import { Playfair_Display, Inter, Chango } from 'next/font/google';
+import { Chelsea_Market, Inter, Chango } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { OrderProvider } from '@/components/OrderProvider';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { UserProvider } from '@/components/UserProvider';
 
-const playfair = Playfair_Display({
+const chelseaMarket = Chelsea_Market({
   subsets: ['latin'],
+  weight: '400',
   variable: '--font-playfair',
   display: 'swap',
 });
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${playfair.variable} ${inter.variable} ${chango.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${chelseaMarket.variable} ${inter.variable} ${chango.variable}`}>
       <body className="font-body bg-bg text-text">
         <LanguageProvider>
           <ThemeProvider>

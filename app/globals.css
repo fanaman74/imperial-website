@@ -10,7 +10,7 @@
   --color-accent-alt: #d4a84b;
   --color-border: rgba(255, 255, 255, 0.08);
 
-  --font-display: var(--font-playfair, 'Playfair Display'), Georgia, serif;
+  --font-display: var(--font-playfair, 'Chelsea Market'), cursive;
   --font-body: var(--font-inter, 'Inter'), 'DM Sans', sans-serif;
   --font-chango: var(--font-chango, 'Chango'), cursive;
 
