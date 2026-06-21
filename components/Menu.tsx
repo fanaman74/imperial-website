@@ -81,9 +81,9 @@ export default function Menu({ categories, dict }: MenuProps) {
               <div key={item.id} className="flex items-center py-3 border-b border-border/50 group">
                 <span className="w-10 text-text-muted text-sm">{item.num}</span>
                 <div className="flex-1 min-w-0 pr-4">
-                  <span className="text-sm font-medium"><WithChili text={item.name} /></span>
+                  <div className="text-sm font-medium"><WithChili text={item.name} /></div>
                   {item.description && (
-                    <span className="text-text-muted text-xs ml-2">{item.description}</span>
+                    <div className="text-text-muted text-xs mt-0.5">{item.description}</div>
                   )}
                 </div>
                 <span className="w-16 text-center text-sm">{item.priceRestaurant.toFixed(2)}&euro;</span>
