@@ -3,19 +3,18 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
-// Replace these with your downloaded Google review photos
-// Place images in /public/reviews/ named review-1.jpg through review-10.jpg
+// Photos from Restaurant Imperial's Google Maps listing
 const PHOTOS = [
-  { src: 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/3926133/pexels-photo-3926133.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/1907244/pexels-photo-1907244.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/699953/pexels-photo-699953.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/2983101/pexels-photo-2983101.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/941861/pexels-photo-941861.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/1410235/pexels-photo-1410235.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
-  { src: 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=800', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAFSQDn9S6zPjMV0yUNjh-lI2M1XbfmllCC47UHxaBLz_HzQIigyCt9ClIhKkrflCtYbVoUskCEPh-pYKyoFX_EsNbxC60m-2JVoMQUGgIzSRGIYp-xl4PMuLHvoN5k3JuFOWAFZ=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAGf43rRzYawnsp2JFnBqk_krT23FqeBc-qXvhSVBDBsaRHRZ9vNDu8iBEyWAxh2Fv7KW6b0EiQ_Md6Dk4zK1qlxiaPbhbKXYiGQ84TVya4NEaYf0SjxfmH3vP7Ls2sR7PWxrw4=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAFp3n9OYZZWSZdBVugAJKClqw_Pbvj-ICMgPS7ZciKJ9f1JNB5ttx9GUwA0AQGSSFYv3Cxk5oRBrJ9a5r6P9-9vZG74zOQhjjW42ZwjjMndZtitjduk4l10OYest5iTJkMOskV3dQ=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAGx6KFs_B5DjvqC23t5RDpA74EhuYQQOzlp_xBXSoi6RfT_kOPqVF6irEAzcDvpzQqj3Ybp_RcfONfB_ZPwvUxGoXXE-ECpi9dDa7CUeBFFUtLd3G5jvzADTAiAEVgck1oe3hfK=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAGb0HeRXdjgyiYKozOkzgYL_1jlgHKwwWwsfnJhY6-Sxp_YObKNj4Gnevpx2IQPCxDr1xOGm05cvBpdqCcGzSk5FWlk1WyLbC5OaS3HPP8xdZA87ItdXl2RKtaXvpDGNBNcXBFnKA=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAFOjE6d75WYYLL-ye7zUNjphXAEWEA6af32muOIUYUUOQW_3BwsMPTtbG9uXuNKxH4EAUiI-pClEkAckiQ0rOFftBKl1aiBGSw2h7RxgqJMqdngm7IBuKL-6UGQKyX3YSor=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAGFtSGYkaQcAc6i8_0dgi48kXHUfVnwbeGVITLEQ64J3r0PS9BPnRIQOMNrqQj4sY5JPdZvXbaiYn5qVXIfzuafUEuxv3OmH0AuWb6a_iuEwXAoz66XYxsNBL0SOhPzipSPRi_-bAMok68=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAFmkje67HEeimpBiIhUljQBt2ZeukcPa-Zs4k3CkDf7RK5EzjCAILCf0IEGgHE48JI5PaTuQAXrUoVQjoouj2LI9FsTbB8ev8GRLFlKVHB6Nt6gpm1rlzMGa7kLl5Sg4ksU8XlGJg=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAFZy2LjOt9p4sk4qpwM-B-9Qo-aoaGluAwLYwdFISXwqtmgg0C37vn0vPp9dNQRrgWmDEveimKiLt29m5-VbTX4asHU_fuR9XHgwGYfMyqGrMv7SD7vCn3pwgthEK4LTOUdAwivledsMrAR=w800-h600-k-no', alt: 'Restaurant Imperial' },
+  { src: 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAF1seWBaw-H9ygcl0QjaSK717ASS37lHHnVrrQP-0PM2o1M7vaaUEcDGqBO_odSspvt8n2cqTAOMBUoDDy2s-7rWvMbzrpWAhXUU4050s0vosryeElJG28180S9R-6830xWl8k=w800-h600-k-no', alt: 'Restaurant Imperial' },
 ];
 
 export default function ReviewsCarousel() {
