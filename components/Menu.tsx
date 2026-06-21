@@ -93,7 +93,7 @@ export default function Menu({ categories, dict }: MenuProps) {
                       id: item.id,
                       name: item.name,
                       desc: item.description,
-                      price: item.priceRestaurant,
+                      price: item.priceTakeaway ?? Math.round(item.priceRestaurant * 0.9 * 100) / 100,
                     })}
                     aria-label={`Add ${item.name} to cart`}
                     className="w-7 h-7 rounded-full border border-border flex items-center justify-center

@@ -276,6 +276,7 @@ export default function TakeawayPanel() {
                       <span className="text-sm uppercase tracking-wider text-text-muted">{t.total}</span>
                       <span className="font-display text-xl text-accent">{total.toFixed(2)}&euro;</span>
                     </div>
+                    <p className="text-xs text-accent/70 text-right">–10% tarif emporter inclus</p>
                     <button
                       onClick={() => setStep('details')}
                       className="w-full py-3 text-sm uppercase tracking-wider bg-accent text-bg hover:bg-accent/90 transition-colors"
