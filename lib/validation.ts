@@ -13,6 +13,7 @@ export const emailSchema = z.string()
 export const otpSendSchema = z.object({
   email: emailSchema,
   name: z.string().max(100).optional(),
+  locale: z.enum(LOCALES).optional().default('fr'),
 });
 
 export const cartItemSchema = z.object({

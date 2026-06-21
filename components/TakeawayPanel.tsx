@@ -106,12 +106,12 @@ export default function TakeawayPanel() {
       return;
     }
 
-    // Guests: send branded 6-digit code via Resend
+    // Guests: send branded 6-digit code via Resend (localized)
     try {
       const res = await fetch('/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({ email, name, locale }),
       });
       const data = await res.json();
       if (!res.ok) { setDetailsError(data.error || 'Error'); return; }
@@ -130,7 +130,7 @@ export default function TakeawayPanel() {
       const res = await fetch('/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({ email, name, locale }),
       });
       if (!res.ok) { setOtpError(t.otpError || 'Error'); return; }
       setOtp(['', '', '', '', '', '']);
