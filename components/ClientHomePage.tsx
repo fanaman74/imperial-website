@@ -8,6 +8,7 @@ import About from '@/components/About';
 import FeaturedDishes from '@/components/FeaturedDishes';
 import Menu from '@/components/Menu';
 import Events from '@/components/Events';
+import ReviewsCarousel from '@/components/ReviewsCarousel';
 import FindUs from '@/components/FindUs';
 import Reservation from '@/components/Reservation';
 import Footer from '@/components/Footer';
@@ -52,6 +53,7 @@ export default function ClientHomePage() {
         </section>
       )}
       <ScrollReveal><FixedMenus /></ScrollReveal>
+      <ScrollReveal><ReviewsCarousel /></ScrollReveal>
       <ScrollReveal><Events dict={dict.events} /></ScrollReveal>
       <ScrollReveal><FindUs dict={dict.findUs} /></ScrollReveal>
       <Reservation dict={dict.reservation} locale={locale} />
