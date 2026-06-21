@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createUserServerClient } from '@/lib/supabase-ssr';
 import ProfileForm from '@/components/ProfileForm';
 import ReorderButton from '@/components/ReorderButton';
+import Navbar from '@/components/Navbar';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,8 @@ export default async function AccountPage({
   const fullName = (user.user_metadata?.full_name as string | undefined) ?? '';
 
   return (
-    <div className="min-h-screen bg-bg pt-[72px]">
+    <div className="min-h-screen bg-bg">
+      <Navbar />
       <div className="max-w-2xl mx-auto px-6 py-16 space-y-10">
         <h1 className="font-display text-3xl italic">My account</h1>
 
