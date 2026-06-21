@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase-browser';
 
 interface SignInModalProps {
@@ -9,7 +9,15 @@ interface SignInModalProps {
   error?: boolean;
 }
 
-export default function SignInModal({ open, onClose, error }: SignInModalProps) {
+type Mode = 'signin' | 'signup' | 'verify';
+
+export default function SignInModal({ open, onClose, error: authError }: SignInModalProps) {
+  const [mode, setMode] = useState<Mode>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -19,51 +27,124 @@ export default function SignInModal({ open, onClose, error }: SignInModalProps) 
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (open) {
+      setMode('signin');
+      setEmail('');
+      setPassword('');
+      setError('');
+    }
+  }, [open]);
+
   if (!open) return null;
 
-  async function signIn(provider: 'google' | 'facebook') {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
     const supabase = createBrowserClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-    await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+
+    if (mode === 'signin') {
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) {
+        setError(err.message);
+      } else {
+        onClose();
+        window.location.reload();
+      }
+    } else {
+      const { error: err } = await supabase.auth.signUp({ email, password });
+      if (err) {
+        setError(err.message);
+      } else {
+        setMode('verify');
+      }
+    }
+
+    setLoading(false);
+  }
+
+  if (mode === 'verify') {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true">
+        <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+        <div className="relative z-10 bg-surface rounded-lg p-8 w-full max-w-sm mx-4 space-y-4 text-center">
+          <h2 className="font-display text-xl italic">Check your email</h2>
+          <p className="text-sm text-text-muted">
+            We sent a confirmation link to <span className="text-text font-medium">{email}</span>. Click it to activate your account.
+          </p>
+          <button onClick={onClose} className="w-full border border-border rounded px-4 py-3 text-sm hover:border-accent transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Sign in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-label={mode === 'signin' ? 'Sign in' : 'Create account'}>
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative z-10 bg-surface rounded-lg p-8 w-full max-w-sm mx-4 space-y-4">
-        <h2 className="font-display text-xl italic text-center">Sign in</h2>
-        {error && (
+        <h2 className="font-display text-xl italic text-center">
+          {mode === 'signin' ? 'Sign in' : 'Create account'}
+        </h2>
+
+        {(authError || error) && (
           <p className="text-red-400 text-sm text-center bg-red-900/20 rounded px-3 py-2">
-            Sign in failed, please try again.
+            {error || 'Sign in failed, please try again.'}
           </p>
         )}
-        <button
-          onClick={() => signIn('google')}
-          className="w-full flex items-center justify-center gap-3 border border-border rounded px-4 py-3 text-sm hover:border-accent transition-colors"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
-        </button>
-        <button
-          onClick={() => signIn('facebook')}
-          className="w-full flex items-center justify-center gap-3 border border-border rounded px-4 py-3 text-sm hover:border-accent transition-colors"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-          </svg>
-          Continue with Facebook
-        </button>
-        <button
-          onClick={onClose}
-          className="w-full text-center text-sm text-text-muted hover:text-text transition-colors pt-1"
-        >
-          Cancel
-        </button>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label htmlFor="email" className="block text-xs text-text-muted mb-1 uppercase tracking-wider">Email</label>
+            <input
+              id="email"
+              type="email"
+              required
+              autoFocus
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full bg-bg border border-border rounded px-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-colors"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-xs text-text-muted mb-1 uppercase tracking-wider">Password</label>
+            <input
+              id="password"
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full bg-bg border border-border rounded px-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-colors"
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-accent text-bg rounded px-4 py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {loading ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+          </button>
+        </form>
+
+        <div className="flex flex-col gap-2 pt-1">
+          <button
+            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); }}
+            className="w-full text-center text-sm text-text-muted hover:text-text transition-colors"
+          >
+            {mode === 'signin' ? "Don't have an account? Create one" : 'Already have an account? Sign in'}
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full text-center text-sm text-text-muted hover:text-text transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );
