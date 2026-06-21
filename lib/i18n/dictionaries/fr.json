@@ -121,6 +121,33 @@
   "footer": {
     "copyright": "© 2026 Restaurant Imperial · Vilvoorde, Belgique"
   },
+  "account": {
+    "title": "Mon compte",
+    "tabOrders": "Commandes",
+    "tabReservations": "Réservations",
+    "noOrders": "Aucune commande pour l'instant.",
+    "orderTakeaway": "Commander à emporter →",
+    "noReservations": "Aucune réservation pour l'instant.",
+    "makeReservation": "Faire une réservation →",
+    "at": "à",
+    "guests": "convives",
+    "reorder": "Recommander",
+    "reordered": "✓ Ajouté au panier",
+    "profile": "Profil",
+    "fullName": "Nom complet",
+    "namePlaceholder": "Votre nom",
+    "save": "Enregistrer",
+    "saving": "…",
+    "saved": "Enregistré.",
+    "statusLabels": {
+      "pending": "En attente",
+      "confirmed": "Confirmé",
+      "preparing": "En préparation",
+      "ready": "Prêt",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    }
+  },
   "eventContact": {
     "title": "Réserver un Événement",
     "subtitle": "Anniversaires, repas d'entreprise, fêtes de famille",

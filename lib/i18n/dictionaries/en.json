@@ -153,5 +153,32 @@
     "successBody": "We will get back to you as soon as possible to confirm your booking.",
     "backHome": "Back to home",
     "required": "Required field"
+  },
+  "account": {
+    "title": "My account",
+    "tabOrders": "Orders",
+    "tabReservations": "Reservations",
+    "noOrders": "No orders yet.",
+    "orderTakeaway": "Order takeaway →",
+    "noReservations": "No reservations yet.",
+    "makeReservation": "Make a reservation →",
+    "at": "at",
+    "guests": "guests",
+    "reorder": "Reorder",
+    "reordered": "✓ Added to cart",
+    "profile": "Profile",
+    "fullName": "Full name",
+    "namePlaceholder": "Your name",
+    "save": "Save changes",
+    "saving": "…",
+    "saved": "Saved.",
+    "statusLabels": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
   }
 }

@@ -153,5 +153,32 @@
     "successBody": "We nemen zo spoedig mogelijk contact met u op om uw reservering te bevestigen.",
     "backHome": "Terug naar home",
     "required": "Verplicht veld"
+  },
+  "account": {
+    "title": "Mijn account",
+    "tabOrders": "Bestellingen",
+    "tabReservations": "Reserveringen",
+    "noOrders": "Nog geen bestellingen.",
+    "orderTakeaway": "Afhaalbestelling plaatsen →",
+    "noReservations": "Nog geen reserveringen.",
+    "makeReservation": "Een reservering maken →",
+    "at": "om",
+    "guests": "gasten",
+    "reorder": "Opnieuw bestellen",
+    "reordered": "✓ Toegevoegd aan winkelwagen",
+    "profile": "Profiel",
+    "fullName": "Volledige naam",
+    "namePlaceholder": "Uw naam",
+    "save": "Opslaan",
+    "saving": "…",
+    "saved": "Opgeslagen.",
+    "statusLabels": {
+      "pending": "In afwachting",
+      "confirmed": "Bevestigd",
+      "preparing": "In voorbereiding",
+      "ready": "Klaar",
+      "completed": "Voltooid",
+      "cancelled": "Geannuleerd"
+    }
   }
 }
