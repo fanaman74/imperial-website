@@ -53,7 +53,11 @@ export default function SignInModal({ open, onClose, error: authError }: SignInM
         window.location.reload();
       }
     } else {
-      const { error: err } = await supabase.auth.signUp({ email, password });
+      const { error: err } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
       if (err) {
         setError(err.message);
       } else {
