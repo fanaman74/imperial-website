@@ -177,7 +177,7 @@ export default function TakeawayPanel() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setOtpError(t.otpError || 'Code incorrect ou expiré');
+        setOtpError(data.error || t.otpError || 'Code incorrect ou expiré');
         setOtp(['', '', '', '', '', '']);
         setTimeout(() => inputRefs.current[0]?.focus(), 50);
         return;
