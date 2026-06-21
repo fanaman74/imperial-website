@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       email,
       code_hash: codeHash,
       attempts: 0,
+      used: false,
       expires_at: expiresAt.toISOString(),
     });
     if (dbError) {

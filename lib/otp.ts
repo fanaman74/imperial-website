@@ -15,13 +15,15 @@ export async function consumeOtp(email: string, code: string): Promise<
   const supabase = createServerClient();
   const codeHash = hashToken(code.toLowerCase());
 
-  const { data: otps } = await supabase
+  const { data: otps, error: selectError } = await supabase
     .from('imperial_otps')
     .select('id, code_hash, expires_at, used, attempts')
     .eq('email', email)
-    .eq('used', false)
+    .not('used', 'eq', true)
     .order('created_at', { ascending: false })
     .limit(1);
+
+  if (selectError) console.error('[consumeOtp] select error:', selectError);
 
   const otp = otps?.[0];
   if (!otp) return { valid: false, reason: 'invalid' };
