@@ -8,9 +8,8 @@ import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 export async function POST(req: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   try {
     const body = await req.json();
     const parsed = guestCardOrderSchema.safeParse(body);
