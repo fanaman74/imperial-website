@@ -61,6 +61,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (orderError) {
+      if (orderError.code === '23505') {
+        return NextResponse.json({ error: 'Order already placed' }, { status: 409 });
+      }
       console.error('Guest card order insert error:', orderError);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }

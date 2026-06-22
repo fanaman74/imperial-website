@@ -41,6 +41,9 @@ export async function POST(req: NextRequest) {
       if (pi.status !== 'succeeded') {
         return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
       }
+      if (pi.metadata?.userId !== user.id) {
+        return NextResponse.json({ error: 'Payment mismatch' }, { status: 400 });
+      }
     }
 
     // Never trust client prices/total — recompute from authoritative DB prices.
@@ -70,6 +73,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (orderError) {
+      if (orderError.code === '23505') {
+        return NextResponse.json({ error: 'Order already placed' }, { status: 409 });
+      }
       console.error('Order insert error:', orderError);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }

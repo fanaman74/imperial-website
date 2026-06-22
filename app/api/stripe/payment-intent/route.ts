@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       amount: Math.round(total * 100),
       currency: 'eur',
       payment_method_types: ['card'],
+      metadata: { userId: user.id },
     });
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
