@@ -116,7 +116,13 @@
     "successTitle": "Commande confirmée !",
     "successBody": "Nous avons reçu votre commande et vous enverrons une confirmation par email.",
     "newOrder": "Nouvelle commande",
-    "otpNote": "Un code à 6 chiffres vous sera envoyé pour confirmer votre email."
+    "otpNote": "Un code à 6 chiffres vous sera envoyé pour confirmer votre email.",
+    "paymentMethodLabel": "Paiement",
+    "paymentCash": "Espèces à la collecte",
+    "paymentCard": "Carte bancaire",
+    "payNow": "Payer",
+    "processing": "Traitement…",
+    "placeOrder": "Confirmer la commande"
   },
   "footer": {
     "copyright": "© 2026 Restaurant Imperial · Vilvoorde, Belgique"
