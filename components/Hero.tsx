@@ -15,11 +15,11 @@ export default function Hero({ dict }: { dict: HeroDict }) {
         muted
         loop
         playsInline
-        poster="https://assets.mixkit.co/videos/32598/32598-thumb-360-0.jpg"
+        poster="https://assets.mixkit.co/videos/9286/9286-thumb-360-0.jpg"
         className="absolute inset-0 w-full h-full object-cover"
       >
         <source
-          src="https://assets.mixkit.co/videos/32598/32598-720.mp4"
+          src="https://assets.mixkit.co/videos/9286/9286-720.mp4"
           type="video/mp4"
         />
       </video>
