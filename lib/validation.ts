@@ -5,6 +5,7 @@ export const RESERVATION_STATUSES = ['pending', 'confirmed', 'cancelled', 'compl
 export const ORDER_STATUSES = ['pending', 'preparing', 'ready', 'completed', 'cancelled'] as const;
 export const EVENT_REQUEST_STATUSES = ['pending', 'contacted', 'confirmed', 'declined'] as const;
 export const EVENT_TYPES = ['birthday', 'corporate', 'wedding', 'family', 'catering', 'other'] as const;
+export const PAYMENT_METHODS = ['cash', 'card'] as const;
 
 export const emailSchema = z.string()
   .transform(s => s.trim().toLowerCase())
@@ -31,6 +32,7 @@ export const otpVerifySchema = z.object({
   items: z.array(cartItemSchema).min(1).max(50),
   total: z.number().min(0).max(99999),
   locale: z.enum(LOCALES).optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS).optional().default('cash'),
 });
 
 export const authenticatedOrderSchema = z.object({
@@ -39,6 +41,22 @@ export const authenticatedOrderSchema = z.object({
   items: z.array(cartItemSchema).min(1).max(50),
   total: z.number().min(0).max(99999),
   locale: z.enum(LOCALES).optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS).optional().default('cash'),
+  paymentIntentId: z.string().max(100).optional(),
+});
+
+export const guestCardOrderSchema = z.object({
+  email: emailSchema,
+  customerName: z.string().min(1).max(200),
+  customerPhone: z.string().max(30).optional(),
+  items: z.array(cartItemSchema).min(1).max(50),
+  total: z.number().min(0).max(99999),
+  locale: z.enum(LOCALES).optional(),
+  paymentIntentId: z.string().min(1).max(100),
+});
+
+export const paymentIntentRequestSchema = z.object({
+  items: z.array(cartItemSchema).min(1).max(50),
 });
 
 export const authenticatedReservationSchema = z.object({

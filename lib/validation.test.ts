@@ -15,6 +15,8 @@ import {
   EVENT_TYPES,
   authenticatedOrderSchema,
   authenticatedReservationSchema,
+  guestCardOrderSchema,
+  paymentIntentRequestSchema,
 } from './validation';
 
 describe('emailSchema', () => {
@@ -234,5 +236,90 @@ describe('constants', () => {
     expect(ORDER_STATUSES.length).toBeGreaterThan(0);
     expect(EVENT_REQUEST_STATUSES.length).toBeGreaterThan(0);
     expect(EVENT_TYPES.length).toBeGreaterThan(0);
+  });
+});
+
+describe('authenticatedOrderSchema with payment fields', () => {
+  const base = {
+    customerName: 'Alice',
+    items: [{ id: '1', name: 'Spring roll', quantity: 2, price: 5 }],
+    total: 10,
+  };
+
+  it('defaults paymentMethod to cash', () => {
+    const result = authenticatedOrderSchema.safeParse(base);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.paymentMethod).toBe('cash');
+  });
+
+  it('accepts card with paymentIntentId', () => {
+    const result = authenticatedOrderSchema.safeParse({
+      ...base,
+      paymentMethod: 'card',
+      paymentIntentId: 'pi_test_abc123',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown paymentMethod', () => {
+    const result = authenticatedOrderSchema.safeParse({ ...base, paymentMethod: 'bitcoin' });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('otpVerifySchema with paymentMethod', () => {
+  const base = {
+    email: 'test@example.com',
+    code: '123456',
+    items: [{ id: '1', name: 'Spring roll', quantity: 1, price: 5 }],
+    total: 5,
+  };
+
+  it('defaults paymentMethod to cash', () => {
+    const result = otpVerifySchema.safeParse(base);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.paymentMethod).toBe('cash');
+  });
+
+  it('accepts card paymentMethod', () => {
+    const result = otpVerifySchema.safeParse({ ...base, paymentMethod: 'card' });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('guestCardOrderSchema', () => {
+  it('validates required fields', () => {
+    const result = guestCardOrderSchema.safeParse({
+      email: 'guest@example.com',
+      customerName: 'Bob',
+      items: [{ id: '2', name: 'Fried rice', quantity: 1, price: 8 }],
+      total: 8,
+      paymentIntentId: 'pi_test_xyz',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects missing paymentIntentId', () => {
+    const result = guestCardOrderSchema.safeParse({
+      email: 'guest@example.com',
+      customerName: 'Bob',
+      items: [{ id: '2', name: 'Fried rice', quantity: 1, price: 8 }],
+      total: 8,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('paymentIntentRequestSchema', () => {
+  it('validates items array', () => {
+    const result = paymentIntentRequestSchema.safeParse({
+      items: [{ id: '1', name: 'Spring roll', quantity: 2, price: 5 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects empty items', () => {
+    const result = paymentIntentRequestSchema.safeParse({ items: [] });
+    expect(result.success).toBe(false);
   });
 });
