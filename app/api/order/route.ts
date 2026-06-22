@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { createUserServerClient } from '@/lib/supabase-ssr';
 import { createServerClient } from '@/lib/supabase-server';
 import { authenticatedOrderSchema } from '@/lib/validation';
@@ -7,6 +8,8 @@ import { buildOrderEmails } from '@/lib/order-email';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,8 +24,24 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
-    const { customerName, customerPhone, locale } = parsed.data;
+    const { customerName, customerPhone, locale, paymentMethod, paymentIntentId } = parsed.data;
     const email = user.email;
+
+    // Verify PaymentIntent for card orders
+    if (paymentMethod === 'card') {
+      if (!paymentIntentId) {
+        return NextResponse.json({ error: 'Missing paymentIntentId' }, { status: 400 });
+      }
+      let pi;
+      try {
+        pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+      } catch {
+        return NextResponse.json({ error: 'Payment not found' }, { status: 400 });
+      }
+      if (pi.status !== 'succeeded') {
+        return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
+      }
+    }
 
     // Never trust client prices/total — recompute from authoritative DB prices.
     let items, total;
@@ -35,8 +54,6 @@ export async function POST(req: NextRequest) {
       throw e;
     }
 
-    // Use service role for the INSERT+SELECT to bypass the RLS SELECT policy
-    // (auth.uid() = user_id blocks anon-key reads even after a successful insert).
     const { data: order, error: orderError } = await createServerClient()
       .from('imperial_orders')
       .insert({
@@ -46,6 +63,8 @@ export async function POST(req: NextRequest) {
         items,
         total,
         user_id: user.id,
+        payment_method: paymentMethod ?? 'cash',
+        stripe_payment_intent_id: paymentIntentId ?? null,
       })
       .select('id')
       .single();
