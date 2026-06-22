@@ -1,11 +1,16 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useOrder } from './OrderProvider';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useUser } from '@/components/UserProvider';
 import SignInModal from '@/components/SignInModal';
+import { getStripe } from '@/lib/stripe';
 
-type Step = 'cart' | 'details' | 'otp' | 'success';
+type Step = 'cart' | 'details' | 'otp' | 'payment' | 'success';
+type PaymentMethod = 'cash' | 'card';
+
+const stripePromise = getStripe();
 
 function SignInNudge() {
   const [open, setOpen] = useState(false);
@@ -21,6 +26,53 @@ function SignInNudge() {
   );
 }
 
+interface PaymentFormProps {
+  total: number;
+  onSuccess: (paymentIntentId: string) => void;
+  onError: (msg: string) => void;
+  t: Record<string, string>;
+}
+
+function PaymentForm({ total, onSuccess, onError, t }: PaymentFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  async function handlePay(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setProcessing(true);
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+    });
+    if (error) {
+      onError(error.message ?? 'Payment failed');
+      setProcessing(false);
+      return;
+    }
+    if (paymentIntent?.status === 'succeeded') {
+      onSuccess(paymentIntent.id);
+    } else {
+      onError('Payment not completed');
+      setProcessing(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handlePay} className="flex flex-col flex-1 px-6 py-6">
+      <PaymentElement className="mb-6" />
+      <button
+        type="submit"
+        disabled={processing || !stripe}
+        className="w-full py-3 text-sm uppercase tracking-wider bg-accent text-bg hover:bg-accent/90 transition-colors disabled:opacity-50 mt-auto"
+      >
+        {processing ? (t.processing || 'Processing…') : `${t.payNow || 'Pay'} ${total.toFixed(2)} €`}
+      </button>
+    </form>
+  );
+}
+
 export default function TakeawayPanel() {
   const { items, updateQuantity, removeItem, clearOrder, total } = useOrder();
   const { locale, dict } = useLanguage();
@@ -33,8 +85,11 @@ export default function TakeawayPanel() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [detailsError, setDetailsError] = useState('');
+  const [paymentError, setPaymentError] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -76,9 +131,11 @@ export default function TakeawayPanel() {
   function reset() {
     setStep('cart');
     setName(''); setEmail(''); setPhone('');
+    setPaymentMethod('cash');
+    setClientSecret(null);
     setOtp(['', '', '', '', '', '']);
     setSending(false); setVerifying(false);
-    setDetailsError(''); setOtpError('');
+    setDetailsError(''); setOtpError(''); setPaymentError('');
   }
 
   async function handleDetails(e: React.FormEvent) {
@@ -86,13 +143,31 @@ export default function TakeawayPanel() {
     setSending(true);
     setDetailsError('');
 
-    // Signed-in users skip OTP — session cookie is present
     if (user) {
+      if (paymentMethod === 'card') {
+        try {
+          const res = await fetch('/api/stripe/payment-intent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items }),
+          });
+          const data = await res.json();
+          if (!res.ok) { setDetailsError(data.error || 'Error'); setSending(false); return; }
+          setClientSecret(data.clientSecret);
+          setStep('payment');
+        } catch {
+          setDetailsError('Network error');
+        } finally {
+          setSending(false);
+        }
+        return;
+      }
+
       try {
         const res = await fetch('/api/order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ customerName: name, customerPhone: phone || undefined, items, total, locale }),
+          body: JSON.stringify({ customerName: name, customerPhone: phone || undefined, items, total, locale, paymentMethod: 'cash' }),
         });
         const data = await res.json();
         if (!res.ok) { setDetailsError(data.error || 'Error'); return; }
@@ -106,7 +181,6 @@ export default function TakeawayPanel() {
       return;
     }
 
-    // Guests: send branded 6-digit code via Resend (localized)
     try {
       const res = await fetch('/api/otp/send', {
         method: 'POST',
@@ -173,21 +247,72 @@ export default function TakeawayPanel() {
       const res = await fetch('/api/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code, customerName: name, customerPhone: phone || undefined, items, total, locale }),
+        body: JSON.stringify({ email, code, customerName: name, customerPhone: phone || undefined, items, total, locale, paymentMethod }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
+
+      if (!res.ok) {
         setOtpError(data.error || t.otpError || 'Code incorrect ou expiré');
         setOtp(['', '', '', '', '', '']);
         setTimeout(() => inputRefs.current[0]?.focus(), 50);
         return;
       }
+
+      if (paymentMethod === 'card' && data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        setStep('payment');
+        return;
+      }
+
       clearOrder();
       setStep('success');
     } catch {
       setOtpError('Network error');
     } finally {
       setVerifying(false);
+    }
+  }
+
+  async function handlePaymentSuccess(confirmedPaymentIntentId: string) {
+    setPaymentError('');
+    try {
+      if (user) {
+        const res = await fetch('/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: name,
+            customerPhone: phone || undefined,
+            items,
+            total,
+            locale,
+            paymentMethod: 'card',
+            paymentIntentId: confirmedPaymentIntentId,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPaymentError(data.error || 'Error saving order'); return; }
+      } else {
+        const res = await fetch('/api/order/guest-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            customerName: name,
+            customerPhone: phone || undefined,
+            items,
+            total,
+            locale,
+            paymentIntentId: confirmedPaymentIntentId,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setPaymentError(data.error || 'Error saving order'); return; }
+      }
+      clearOrder();
+      setStep('success');
+    } catch {
+      setPaymentError('Network error');
     }
   }
 
@@ -222,9 +347,9 @@ export default function TakeawayPanel() {
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
               <div className="flex items-center gap-3">
-                {(step === 'details' || step === 'otp') && (
+                {(step === 'details' || step === 'otp' || step === 'payment') && (
                   <button
-                    onClick={() => setStep(step === 'otp' ? 'details' : 'cart')}
+                    onClick={() => setStep(step === 'otp' ? 'details' : step === 'payment' ? (user ? 'details' : 'otp') : 'cart')}
                     className="text-text-muted hover:text-text transition-colors"
                     aria-label="Back"
                   >
@@ -237,6 +362,7 @@ export default function TakeawayPanel() {
                   {step === 'cart' && t.title}
                   {step === 'details' && (t.customerName?.replace('Votre ', '').replace('Uw ', '') || 'Commande')}
                   {step === 'otp' && t.otpLabel}
+                  {step === 'payment' && (t.paymentMethodLabel || 'Paiement')}
                   {step === 'success' && t.successTitle}
                 </h3>
               </div>
@@ -304,6 +430,25 @@ export default function TakeawayPanel() {
                     <label className="block text-xs uppercase tracking-widest text-text-muted mb-1.5">{t.customerPhone}</label>
                     <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+32 …" className="w-full bg-transparent border border-border rounded-sm px-4 py-2.5 text-sm text-text focus:outline-none focus:border-accent transition-colors" />
                   </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-text-muted mb-2">{t.paymentMethodLabel || 'Paiement'}</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('cash')}
+                        className={`flex-1 py-2 text-xs uppercase tracking-wider border transition-colors ${paymentMethod === 'cash' ? 'border-accent text-accent bg-accent/10' : 'border-border text-text-muted hover:border-accent/50'}`}
+                      >
+                        {t.paymentCash || 'Cash'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('card')}
+                        className={`flex-1 py-2 text-xs uppercase tracking-wider border transition-colors ${paymentMethod === 'card' ? 'border-accent text-accent bg-accent/10' : 'border-border text-text-muted hover:border-accent/50'}`}
+                      >
+                        {t.paymentCard || 'Card'}
+                      </button>
+                    </div>
+                  </div>
                   {detailsError && <p className="text-red-400 text-xs">{detailsError}</p>}
                 </div>
                 <div className="px-6 py-3 border-t border-border/50 bg-bg-alt/40 shrink-0">
@@ -356,6 +501,22 @@ export default function TakeawayPanel() {
                 >
                   {t.resendCode || 'Renvoyer le code'}
                 </button>
+              </div>
+            )}
+
+            {step === 'payment' && clientSecret && (
+              <div className="flex flex-col flex-1 overflow-y-auto">
+                {paymentError && (
+                  <p className="text-red-400 text-xs px-6 pt-4">{paymentError}</p>
+                )}
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#c41e24' } } }}>
+                  <PaymentForm
+                    total={total}
+                    onSuccess={handlePaymentSuccess}
+                    onError={msg => setPaymentError(msg)}
+                    t={t}
+                  />
+                </Elements>
               </div>
             )}
 
