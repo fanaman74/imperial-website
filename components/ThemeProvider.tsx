@@ -20,6 +20,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
+    document.documentElement.classList.toggle('dark', isDark);
     document.documentElement.classList.toggle('light', !isDark);
     localStorage.setItem('imperial-theme', isDark ? 'dark' : 'light');
   }, [isDark, mounted]);
