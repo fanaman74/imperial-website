@@ -9,12 +9,12 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('imperial-theme');
-    setIsDark(saved ? saved === 'dark' : true);
+    setIsDark(saved ? saved === 'dark' : false);
     setMounted(true);
   }, []);
 

@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #0e0c0c;
-  --color-bg-alt: #1a1412;
-  --color-surface: #231a18;
-  --color-text: #f0e8e0;
-  --color-text-muted: #9a8878;
-  --color-accent: #c41e24;
-  --color-accent-alt: #d4a84b;
-  --color-border: rgba(255, 255, 255, 0.08);
+  --color-bg: #faf5f0;
+  --color-bg-alt: #f0e8e0;
+  --color-surface: #e8ddd4;
+  --color-text: #1a1412;
+  --color-text-muted: #6b5b4f;
+  --color-accent: #a01820;
+  --color-accent-alt: #b8922e;
+  --color-border: rgba(0, 0, 0, 0.08);
 
   --font-display: var(--font-playfair, 'Chelsea Market'), cursive;
   --font-body: var(--font-inter, 'Inter'), 'DM Sans', sans-serif;
@@ -56,19 +56,19 @@ body {
 .hero-animate-delay-3 { animation-delay: 0.6s; }
 .hero-animate-delay-4 { animation-delay: 0.8s; }
 
-/* Light mode overrides */
-:root.light {
-  --color-bg: #faf5f0;
-  --color-bg-alt: #f0e8e0;
-  --color-surface: #e8ddd4;
-  --color-text: #1a1412;
-  --color-text-muted: #6b5b4f;
-  --color-accent: #a01820;
-  --color-accent-alt: #b8922e;
-  --color-border: rgba(0, 0, 0, 0.08);
+/* Dark mode overrides */
+:root.dark {
+  --color-bg: #0e0c0c;
+  --color-bg-alt: #1a1412;
+  --color-surface: #231a18;
+  --color-text: #f0e8e0;
+  --color-text-muted: #9a8878;
+  --color-accent: #c41e24;
+  --color-accent-alt: #d4a84b;
+  --color-border: rgba(255, 255, 255, 0.08);
 }
 
-:root.light body {
+:root.dark body {
   background-color: var(--color-bg);
   color: var(--color-text);
 }
