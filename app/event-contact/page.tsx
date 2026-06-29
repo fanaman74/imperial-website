@@ -203,7 +203,7 @@ export default function EventContactPage() {
           <div className="absolute inset-0 bg-bg/80" />
           <div className="relative z-10 text-center max-w-[600px] mx-auto">
             <p className="text-xs uppercase tracking-[0.3em] text-accent mb-3">{t?.subtitle}</p>
-            <h1 className="font-display italic text-4xl md:text-5xl">{t?.title}</h1>
+            <h1 className="font-chango text-4xl md:text-5xl text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{t?.title}</h1>
           </div>
         </div>
 
