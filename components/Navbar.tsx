@@ -90,14 +90,14 @@ export default function Navbar() {
 
       <nav className={`fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center transition-all duration-[400ms] ease-in-out ${scrolled ? 'bg-bg/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
         <div className="w-full max-w-[1200px] mx-auto px-6 flex items-center">
-          <a href={isHome ? '#accueil' : '/'} className="font-display uppercase tracking-[0.15em] text-2xl text-accent no-underline" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>IMPERIAL</a>
+          <a href={isHome ? '#accueil' : '/'} className="font-display uppercase tracking-[0.15em] text-2xl text-white no-underline" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>IMPERIAL</a>
 
           <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
             {navLinks.map(link => (
               <a
                 key={link.key}
                 href={resolveHref(link)}
-                className={`text-sm uppercase tracking-wider hover:text-accent transition-colors font-medium ${pathname === link.href ? 'text-accent' : 'text-text'}`}
+                className={`text-sm uppercase tracking-wider hover:text-accent transition-colors font-medium ${pathname === link.href ? 'text-accent' : 'text-white'}`}
                 style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
               >
                 {(dict.nav as Record<string, string>)[link.key]}
@@ -153,7 +153,7 @@ export default function Navbar() {
           className="fixed inset-0 z-40 bg-bg/98 flex flex-col items-center justify-center gap-8 md:hidden"
         >
           {navLinks.map(link => (
-            <a key={link.key} href={resolveHref(link)} onClick={() => setMenuOpen(false)} className="text-2xl font-display italic text-text hover:text-accent transition-colors" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+            <a key={link.key} href={resolveHref(link)} onClick={() => setMenuOpen(false)} className="text-2xl font-display italic text-white hover:text-accent transition-colors" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
               {(dict.nav as Record<string, string>)[link.key]}
             </a>
           ))}
