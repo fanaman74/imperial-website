@@ -13,7 +13,7 @@ const navLinks = [
   { key: 'takeaway', href: '/takeaway', anchor: false },
   { key: 'events', href: '#evenements', anchor: true },
   { key: 'info', href: '#informations', anchor: true },
-  { key: 'contact', href: '#contact', anchor: true },
+  { key: 'contact', href: '/event-contact', anchor: false },
 ];
 
 const langs: Locale[] = ['fr', 'nl', 'en'];
