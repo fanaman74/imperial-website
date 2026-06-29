@@ -80,14 +80,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Skip to content link for keyboard users */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-accent focus:text-bg focus:px-4 focus:py-2 focus:rounded focus:text-sm"
-      >
-        Skip to content
-      </a>
-
       <nav className={`fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center transition-all duration-[400ms] ease-in-out ${scrolled ? 'bg-bg/95 backdrop-blur-md border-b border-border' : 'bg-transparent'}`}>
         <div className="w-full max-w-[1200px] mx-auto px-6 flex items-center">
           <a href={isHome ? '#accueil' : '/'} className="font-display uppercase tracking-[0.15em] text-2xl text-white no-underline" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>IMPERIAL</a>
