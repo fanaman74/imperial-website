@@ -47,6 +47,43 @@ npm run dev
 
 The site runs at `http://localhost:3000`.
 
+## Email Configuration
+
+The site sends transactional emails via [Resend](https://resend.com) for orders, reservations, and event inquiries. Emails are sent to both customers and the restaurant.
+
+### Setup
+
+1. **Sign up for Resend** at https://resend.com and create an API key
+2. **Verify a sender email** in Resend (usually your restaurant's email)
+3. **Set environment variables:**
+   - `RESEND_API_KEY` — Your Resend API key
+   - `RESEND_FROM_EMAIL` — The verified sender email (e.g., `noreply@restaurant-imperial.be`)
+   - `RESTAURANT_EMAIL` — Where order/reservation/event notifications are sent (e.g., `kitchen@restaurant-imperial.be`)
+
+### Email Types
+
+| Event | Customer Email | Restaurant Email |
+|-------|---|---|
+| **Takeaway Order (Cash)** | Order confirmation with items & total | Order details + customer contact |
+| **Takeaway Order (Card)** | Order confirmation with Stripe payment receipt | Order details + customer contact |
+| **Table Reservation** | Reservation confirmation with date/time | Reservation details + customer contact + phone |
+| **Event Inquiry** | Form confirmation with event details | Inquiry details + customer contact + event type |
+
+### Stripe Payment Integration
+
+When customers pay via card for takeaway orders:
+1. Customer completes Stripe payment via Payment Element
+2. PaymentIntent is verified server-side (`payment_method='card'`)
+3. Email confirmation sent to both customer and restaurant
+4. Stripe webhooks optional (app verifies intent status directly)
+
+### Resend Best Practices
+
+- Emails are sent **fire-and-forget** (non-blocking) to avoid slowing down API responses
+- Failed email sends are logged but don't fail the order/reservation
+- All user input in emails is HTML-escaped to prevent injection
+- Emails use consistent HTML templates matching the restaurant brand
+
 ### 4. Build for production
 
 ```bash
